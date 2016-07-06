@@ -3,6 +3,7 @@
 
 """ShorewallLogAnalyzer.py: Analyze Shorewall logs."""
 
+
 try:
 
     import sys
@@ -22,7 +23,9 @@ except ImportError as e:
     sys.exit(1)
 
 
+
 import RDAP
+from Utils import is_valid_timestamp
 
 class ShorewallLogAnalyzer:
     """ Read log file, interprets data and write to database. """
@@ -43,6 +46,7 @@ class ShorewallLogAnalyzer:
 
     
     def __init__(self, dbFilename = './shorewall.sqlite', initDBFilename = 'initDB.sql'):
+
     
         self.initDB(initDBFilename, dbFilename)
         self.dbFilename = dbFilename
@@ -65,6 +69,7 @@ class ShorewallLogAnalyzer:
         try:
             self.dbConnection = sqlite3.connect(dbFilename)
             self.dbCursor     = self.dbConnection.cursor()
+
         except FileNotFoundError as e:
             self.log(str(e)+". Exiting.")
             return False            
@@ -80,9 +85,11 @@ class ShorewallLogAnalyzer:
         self.log("Configuration OK.")
         return self.tryCommit()
         
+
     def getPackets(self, logFilename = '/var/log/kern.log'):
         """ Reads each line of the file with the function below (`readLine`). """
         self.log("Getting packets from "+logFilename)
+
         try:
             logFile = open(logFilename,'r')
         except FileNotFoundError as e:
@@ -130,7 +137,11 @@ class ShorewallLogAnalyzer:
                         except IndexError:
                             right = ''
                         ip[left] = right
+<<<<<<< HEAD
                 
+=======
+                    
+>>>>>>> 5a177a6... Only accept timestamps formated as a Unix timestamp (with millisecond)
                 return {'timestamp': timestamp, 'host': host, 'chain': chain, 'action': action, 'ip': ip}
         else:
             
@@ -144,6 +155,8 @@ class ShorewallLogAnalyzer:
             """ Insert packet or ignore silently (`timestamp` is the primary key). 
                 Not all of the values of the packet `ip` dict are being used.
                 You can add some there, but you need to modify initDB.sql too """
+<<<<<<< HEAD
+
             try:    
                 self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt, mac) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',\
                                      (p['timestamp'],\
@@ -168,12 +181,30 @@ class ShorewallLogAnalyzer:
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")
         return self.tryCommit()
 
+=======
+            self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',\
+                                 (p['timestamp'],\
+                                  p['host'],\
+                                  p['chain'],\
+                                  p['action'],\
+                                  p['ip']['IN'],\
+                                  p['ip']['OUT'],\
+                                  p['ip']['SRC'],\
+                                  p['ip']['DST'],\
+                                  p['ip']['PROTO'],\
+                                  p['ip']['SPT'],\
+                                  p['ip']['DPT']))
+                                  
+        self.dbConnection.commit()
+>>>>>>> 5a177a6... Only accept timestamps formated as a Unix timestamp (with millisecond)
+
     def updateAddresses(self):
         """ Select all uniq addresses from the `packets` table and insert them in the `addresses` table. """
         
         query = "SELECT DISTINCT addr FROM (SELECT dst AS addr FROM packets UNION SELECT src AS addr FROM packets AS addr)"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
+
         self.log(str(len(addresses))+" addresses.")
         try:
             self.dbCursor.executemany("INSERT OR IGNORE INTO addresses (address) VALUES (?)",addresses)
@@ -193,10 +224,12 @@ class ShorewallLogAnalyzer:
         self.log(str(len(addresses))+" addresses to resolve.")
         for address in addresses:
             self.log(address[0])
+
             try:
                 hostname = socket.gethostbyaddr(address[0])
                 self.dbCursor.execute("UPDATE addresses SET hostname = ? WHERE address = ?",(hostname[0],hostname[2][0]))
                 self.log(hostname[2][0]+" resolved as "+hostname[0])
+
             except socket.herror as e:
                 self.log(address[0]+" "+str(e))
                 self.dbCursor.execute("UPDATE addresses SET hostname = ? WHERE address = ?",('NXDOMAIN',address[0]))
@@ -206,6 +239,8 @@ class ShorewallLogAnalyzer:
                 self.dbConnection.close()
         self.tryCommit()        
         return True
+
+
 
 
     def updateNetworks(self, refresh_all=False):
@@ -228,6 +263,7 @@ class ShorewallLogAnalyzer:
                 continue
         self.tryCommit()        
         return True
+
 
 
     def updateEntities(self, refresh_all=False):
