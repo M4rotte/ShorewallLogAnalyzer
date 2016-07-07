@@ -44,6 +44,10 @@ class RDAP:
             
         return (handle, name, country, type, start_addr, end_addr, parent_handle, ' '.join(entities))
 
+rdap = RDAP()
+def getNetwork(search):
+    
+    return rdap.getNetwork(search)
  
 if (__name__ == "__main__"):
     

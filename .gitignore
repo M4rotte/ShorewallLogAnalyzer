@@ -1,4 +1,6 @@
+*.bak
 *.sqlite
+*.sqlite-journal
 *.log
 __pycache__
 
