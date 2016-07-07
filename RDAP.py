@@ -120,7 +120,6 @@ class RDAP:
         except KeyError:
             pass
 
-        
         return (handle, vcard, ' '.join(entities), source)
 
 rdap = RDAP()
@@ -137,6 +136,7 @@ def getASR():
 def getEntity(search, rdap_url):
     
     return rdap.getEntity(search, rdap_url)
+
  
 if (__name__ == "__main__"):
     

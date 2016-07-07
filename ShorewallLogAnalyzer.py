@@ -24,7 +24,7 @@ except ImportError as e:
 
 
 
-import RDAP
+from RDAP import getNetwork
 from Utils import is_valid_timestamp
 
 class ShorewallLogAnalyzer:
@@ -62,7 +62,7 @@ class ShorewallLogAnalyzer:
             self.dbConnection.rollback()
             self.dbConnection.close()
             return False
-    
+
     
     def initDB(self, initDBFilename, dbFilename):
         """ Create the database if not exists. """
@@ -229,6 +229,7 @@ class ShorewallLogAnalyzer:
         self.initDB(self.initDBFilename, self.dbFilename)
         self.log(str(len(addresses))+" RDAP queries.")
         for address in addresses:
+
             try:
                 info = getNetwork(address[0])
                 query = "INSERT OR IGNORE INTO networks (handle,name,country,type,start_addr,end_addr,parent_handle,entities,source) VALUES (?,?,?,?,?,?,?,?,?)"
@@ -240,6 +241,7 @@ class ShorewallLogAnalyzer:
                 continue
         self.tryCommit()        
         return True
+
 
 
 
@@ -299,6 +301,7 @@ class ShorewallLogAnalyzer:
         return self.tryCommit()
         
     def generateContent(self):
+
         
         generateContent(self)
         return True    
