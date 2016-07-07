@@ -137,11 +137,7 @@ class ShorewallLogAnalyzer:
                         except IndexError:
                             right = ''
                         ip[left] = right
-<<<<<<< HEAD
-                
-=======
-                    
->>>>>>> 5a177a6... Only accept timestamps formated as a Unix timestamp (with millisecond)
+
                 return {'timestamp': timestamp, 'host': host, 'chain': chain, 'action': action, 'ip': ip}
         else:
             
@@ -155,7 +151,6 @@ class ShorewallLogAnalyzer:
             """ Insert packet or ignore silently (`timestamp` is the primary key). 
                 Not all of the values of the packet `ip` dict are being used.
                 You can add some there, but you need to modify initDB.sql too """
-<<<<<<< HEAD
 
             try:    
                 self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt, mac) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',\
@@ -181,22 +176,7 @@ class ShorewallLogAnalyzer:
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")
         return self.tryCommit()
 
-=======
-            self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',\
-                                 (p['timestamp'],\
-                                  p['host'],\
-                                  p['chain'],\
-                                  p['action'],\
-                                  p['ip']['IN'],\
-                                  p['ip']['OUT'],\
-                                  p['ip']['SRC'],\
-                                  p['ip']['DST'],\
-                                  p['ip']['PROTO'],\
-                                  p['ip']['SPT'],\
-                                  p['ip']['DPT']))
-                                  
-        self.dbConnection.commit()
->>>>>>> 5a177a6... Only accept timestamps formated as a Unix timestamp (with millisecond)
+
 
     def updateAddresses(self):
         """ Select all uniq addresses from the `packets` table and insert them in the `addresses` table. """
@@ -239,9 +219,6 @@ class ShorewallLogAnalyzer:
                 self.dbConnection.close()
         self.tryCommit()        
         return True
-
-
-
 
     def updateNetworks(self, refresh_all=False):
         
