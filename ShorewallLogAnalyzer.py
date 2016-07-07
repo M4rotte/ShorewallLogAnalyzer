@@ -12,6 +12,7 @@ import datetime
 import socket
 
 import RDAP
+from Utils import is_valid_timestamp
 
 class ShorewallLogAnalyzer:
     """ Read log file, interprets data and write to database. """
@@ -73,7 +74,12 @@ class ShorewallLogAnalyzer:
         if (self.logSplitter.match(line)):
 
                 split = self.logSplitter.split(line)
-                timestamp = split[1].replace('kernel: ','').replace('[','').replace(']','').replace('  ',' ') # "timestamp" includes the hostname
+                left_part = split[1].split(' ')
+                timestamp = left_part[0]
+                if (not is_valid_timestamp(timestamp)):
+                    self.log("Invalid timestamp: "+timestamp)
+                    return False
+                host      = left_part[1]
                 data      = split[2]
                 data_split = data.split(':')
                 chain = data_split[0]
@@ -91,7 +97,7 @@ class ShorewallLogAnalyzer:
                             right = ''
                         ip[left] = right
                     
-                return {'timestamp': timestamp, 'chain': chain, 'action': action, 'ip': ip}
+                return {'timestamp': timestamp, 'host': host, 'chain': chain, 'action': action, 'ip': ip}
         else:
             
             return False
@@ -105,8 +111,9 @@ class ShorewallLogAnalyzer:
             """ Insert packet or ignore silently (`timestamp` is the primary key). 
                 Not all of the values of the packet `ip` dict are being used.
                 You can add some there, but you need to modify initDB.sql too """
-            self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, chain, action, if_in, if_out, src, dst, proto, spt, dpt) VALUES (?,?,?,?,?,?,?,?,?,?)',\
+            self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',\
                                  (p['timestamp'],\
+                                  p['host'],\
                                   p['chain'],\
                                   p['action'],\
                                   p['ip']['IN'],\
@@ -153,6 +160,7 @@ if (__name__ == "__main__"):
     analyzer.updatePackets()
     analyzer.updateAddresses()
     analyzer.updateHostnames()
+
     
 
 

@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS packets (
-timestamp TEXT NOT NULL,
+timestamp DATETIME NOT NULL,
+host TEXT,
 chain TEXT NOT NULL,
 action TEXT NOT NULL,
 if_in TEXT,
@@ -9,7 +10,7 @@ dst TEXT,
 proto TEXT,
 spt INT,
 dpt INT,
-PRIMARY KEY(timestamp));
+PRIMARY KEY(timestamp, host));
 
 CREATE TABLE IF NOT EXISTS networks (
 handle TEXT,
@@ -25,10 +26,9 @@ PRIMARY KEY (handle));
 CREATE TABLE IF NOT EXISTS addresses (
 address TEXT NOT NULL,
 hostname TEXT,
-PRIMARY KEY (address));
-
-CREATE TABLE IF NOT EXISTS addr_net (
-address TEXT,
 network TEXT,
-FOREIGN KEY (network) REFERENCES networks(handle));
+PRIMARY KEY (address),
+FOREIGN KEY(network) REFERENCES networs(handle));
+
+
 
