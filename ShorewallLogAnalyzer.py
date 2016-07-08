@@ -79,6 +79,7 @@ class ShorewallLogAnalyzer:
         except Error as e:
             self.log(e)
             return False                 
+
         query = initDBFile.read()    
         self.dbCursor.executescript(query)
         initDBFile.close()
@@ -154,6 +155,7 @@ class ShorewallLogAnalyzer:
 
             try:    
                 self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt, mac) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',\
+
                                      (p['timestamp'],\
                                       p['host'],\
                                       p['chain'],\
@@ -176,8 +178,6 @@ class ShorewallLogAnalyzer:
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")
         return self.tryCommit()
 
-
-
     def updateAddresses(self):
         """ Select all uniq addresses from the `packets` table and insert them in the `addresses` table. """
         
@@ -193,7 +193,7 @@ class ShorewallLogAnalyzer:
             self.dbConnection.close()
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")    
         return self.tryCommit()
-            
+
     def updateHostnames(self, resolve_all=False):
         
         if not resolve_all: query = "SELECT address FROM addresses WHERE hostname IS NULL"   
@@ -217,8 +217,10 @@ class ShorewallLogAnalyzer:
             except sqlite3.OperationalError:
                 self.log("Database locked. Exiting.")
                 self.dbConnection.close()
+
         self.tryCommit()        
         return True
+
 
     def updateNetworks(self, refresh_all=False):
         
@@ -246,6 +248,7 @@ class ShorewallLogAnalyzer:
 
 
     def updateEntities(self, refresh_all=False):
+
         
         query = "SELECT entities, source FROM networks"
         result = self.dbCursor.execute(query)
@@ -278,7 +281,6 @@ class ShorewallLogAnalyzer:
         self.tryCommit()             
         return True
 
-        
     def declareViews(self,  dbFilename, viewDBFilename = 'viewDB.sql',):
         """ Create the database if not exists. """
         self.log(viewDBFilename)
