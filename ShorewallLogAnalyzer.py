@@ -3,7 +3,6 @@
 
 """ShorewallLogAnalyzer.py: Analyze Shorewall logs."""
 
-
 try:
 
     import sys
@@ -23,7 +22,6 @@ except ImportError as e:
     sys.exit(1)
 
 
-
 from RDAP import getNetwork
 from Utils import is_valid_timestamp
 
@@ -40,7 +38,6 @@ class ShorewallLogAnalyzer:
         else: sep = ''
         try:
             print(str(datetime.datetime.now())+" "+inspect.currentframe().f_back.f_code.co_name+sep+" "+message,file=sys.stderr)
-
         except (TypeError, urllib.error.URLError):
             pass
 
@@ -63,9 +60,19 @@ class ShorewallLogAnalyzer:
             self.dbConnection.close()
             return False
 
+    def tryCommit(self):
+        
+        try: self.dbConnection.commit()
+        except Error as e:
+            self.log(e)
+            self.dbConnection.rollback()
+            self.dbConnection.close()
+            return False
+    
     
     def initDB(self, initDBFilename, dbFilename):
         """ Create the database if not exists. """
+
         try:
             self.dbConnection = sqlite3.connect(dbFilename)
             self.dbCursor     = self.dbConnection.cursor()
@@ -76,7 +83,9 @@ class ShorewallLogAnalyzer:
         try:
             initDBFile      = open(initDBFilename,'r')
             self.log(initDBFile)
+
         except Error as e:
+
             self.log(e)
             return False                 
 
@@ -85,7 +94,6 @@ class ShorewallLogAnalyzer:
         initDBFile.close()
         self.log("Configuration OK.")
         return self.tryCommit()
-        
 
     def getPackets(self, logFilename = '/var/log/kern.log'):
         """ Reads each line of the file with the function below (`readLine`). """
@@ -154,8 +162,7 @@ class ShorewallLogAnalyzer:
                 You can add some there, but you need to modify initDB.sql too """
 
             try:    
-                self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt, mac) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',\
-
+                self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',\
                                      (p['timestamp'],\
                                       p['host'],\
                                       p['chain'],\
@@ -175,8 +182,11 @@ class ShorewallLogAnalyzer:
                 return False
             except KeyError:
                 continue
+
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")
+
         return self.tryCommit()
+
 
     def updateAddresses(self):
         """ Select all uniq addresses from the `packets` table and insert them in the `addresses` table. """
@@ -202,6 +212,7 @@ class ShorewallLogAnalyzer:
         addresses = result.fetchall()
         self.initDB(self.initDBFilename, self.dbFilename)
         self.log(str(len(addresses))+" addresses to resolve.")
+
         for address in addresses:
             self.log(address[0])
 
@@ -218,6 +229,7 @@ class ShorewallLogAnalyzer:
                 self.log("Database locked. Exiting.")
                 self.dbConnection.close()
 
+
         self.tryCommit()        
         return True
 
@@ -230,8 +242,8 @@ class ShorewallLogAnalyzer:
         addresses = result.fetchall()
         self.initDB(self.initDBFilename, self.dbFilename)
         self.log(str(len(addresses))+" RDAP queries.")
-        for address in addresses:
 
+        for address in addresses:
             try:
                 info = getNetwork(address[0])
                 query = "INSERT OR IGNORE INTO networks (handle,name,country,type,start_addr,end_addr,parent_handle,entities,source) VALUES (?,?,?,?,?,?,?,?,?)"
@@ -263,6 +275,7 @@ class ShorewallLogAnalyzer:
                     self.log(e)
                     continue
         self.tryCommit()
+
         
         if not refresh_all: query = "SELECT * FROM entities WHERE entities.vcard IS NULL"
         else: query = "SELECT * FROM entities"
@@ -300,6 +313,7 @@ class ShorewallLogAnalyzer:
         self.dbCursor.executescript(query)
         viewDBFile.close()
         self.log("Views OK.")
+
         return self.tryCommit()
         
     def generateContent(self):
