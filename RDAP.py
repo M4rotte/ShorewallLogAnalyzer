@@ -3,7 +3,6 @@
 
 import urllib.request
 import json
-from pprint import pprint
 import sys
 
 class RDAP:
@@ -18,7 +17,7 @@ class RDAP:
             rawdata = response.read().decode('utf-8')
             response.close()
             data  = json.loads(rawdata)        
-        except urllib.error.HTTPError as e:
+        except (urllib.error.HTTPError, urllib.error.URLError) as e:
             print(e,file=sys.stderr)
             data = {}
         
@@ -53,7 +52,7 @@ if (__name__ == "__main__"):
     
     rdap = RDAP()
     try:
-        pprint(rdap.getNetwork(sys.argv[1]))
+        print(rdap.getNetwork(sys.argv[1]))
     except IndexError:
         pass
         

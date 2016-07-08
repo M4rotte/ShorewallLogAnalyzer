@@ -10,6 +10,7 @@ from pprint import pprint
 import inspect
 import datetime
 import socket
+import urllib
 
 from RDAP import getNetwork
 from Utils import is_valid_timestamp
@@ -27,32 +28,50 @@ class ShorewallLogAnalyzer:
         else: sep = ''
         try:
             print(str(datetime.datetime.now())+" "+inspect.currentframe().f_back.f_code.co_name+sep+" "+message,file=sys.stderr)
-        except TypeError:
+        except (TypeError, urllib.error.URLError):
             pass
 
     
     def __init__(self, dbFilename = './shorewall.sqlite', initDBFilename = 'initDB.sql'):
     
         self.initDB(initDBFilename, dbFilename)
+        self.dbFilename = dbFilename
+        self.initDBFilename = initDBFilename
 
+    def tryCommit(self):
+        
+        try: self.dbConnection.commit()
+        except Error as e:
+            self.log(e)
+            self.dbConnection.rollback()
+            self.dbConnection.close()
+            return False
+    
     
     def initDB(self, initDBFilename, dbFilename):
         """ Create the database if not exists. """
-        self.log()
-        self.dbConnection = sqlite3.connect(dbFilename)
-        self.dbCursor     = self.dbConnection.cursor()
+        self.log(initDBFilename)
         try:
-            initDBFile      = open(initDBFilename,'r')
+            self.dbConnection = sqlite3.connect(dbFilename)
+            self.dbCursor     = self.dbConnection.cursor()
         except FileNotFoundError as e:
             self.log(str(e)+". Exiting.")
-            exit(1)
+            return False            
+        try:
+            initDBFile      = open(initDBFilename,'r')
+            self.log(initDBFile)
+        except urllib.error.URLError as e:
+            self.log(e)
+            return False                 
         query = initDBFile.read()    
         self.dbCursor.executescript(query)
         initDBFile.close()
-        self.dbConnection.commit()
+        self.log("Configuration OK.")
+        return self.tryCommit()
         
-    def getPackets(self, logFilename = './kern.log'):
+    def getPackets(self, logFilename = '/var/log/kern.log'):
         """ Reads each line of the file with the function below (`readLine`). """
+        self.log("Getting packets from "+logFilename)
         try:
             logFile = open(logFilename,'r')
         except FileNotFoundError as e:
@@ -61,8 +80,9 @@ class ShorewallLogAnalyzer:
         try:
             for line in logFile.readlines():
                 packet = self.readLine(line)
-                if (packet): 
+                if (packet):
                     self.packets.append(packet)
+                    
         except AttributeError:
             self.log("Nothing to read !")
 
@@ -85,7 +105,7 @@ class ShorewallLogAnalyzer:
                 data_split = data.split(':')
                 chain = data_split[0]
                 action = data_split[1]
-                ip_data = data_split[2]
+                ip_data = ' '.join(data_split[2:])
                 ip_data_split = ip_data.split(' ')
                 ip = {}
                 for ipd in ip_data_split:
@@ -125,11 +145,15 @@ class ShorewallLogAnalyzer:
                                       p['ip']['PROTO'],\
                                       p['ip']['SPT'],\
                                       p['ip']['DPT']))
-            except sqlite3.OperationalError:
-                self.log("Database locked. Exiting.")
-                sys.exit(1)                                    
-        try: self.dbConnection.commit()
-        except Error as e: self.log(e)
+
+            except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
+                self.log(str(e)+"Exiting.")
+                self.dbConnection.close()
+            except KeyError:
+                continue
+        self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")
+        return self.tryCommit()
+
 
     def updateAddresses(self):
         """ Select all uniq addresses from the `packets` table and insert them in the `addresses` table. """
@@ -142,9 +166,9 @@ class ShorewallLogAnalyzer:
             self.dbCursor.executemany("INSERT OR IGNORE INTO addresses (address) VALUES (?)",addresses)
         except sqlite3.OperationalError:
             self.log("Database locked. Exiting.")
-            sys.exit(1)    
-        try: self.dbConnection.commit()
-        except Error as e: self.log(e)
+            self.dbConnection.close()
+        self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")    
+        return self.tryCommit()
             
     def updateHostnames(self, resolve_all=False):
         
@@ -152,20 +176,23 @@ class ShorewallLogAnalyzer:
         else: query = "SELECT address FROM addresses"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
+        self.initDB(self.initDBFilename, self.dbFilename)
+        self.log(str(len(addresses))+" to resolve.")
         for address in addresses:
+            self.log(address[0])
             try:
                 hostname = socket.gethostbyaddr(address[0])
                 self.dbCursor.execute("UPDATE addresses SET hostname = ? WHERE address = ?",(hostname[0],hostname[2][0]))
                 self.log(hostname[2][0]+" resolved as "+hostname[0])
-            except socket.herror:
-                self.log(address[0]+" not resolved.")
+            except socket.herror as e:
+                self.log(address[0]+" "+str(e))
                 self.dbCursor.execute("UPDATE addresses SET hostname = ? WHERE address = ?",('NXDOMAIN',address[0]))
                 continue
             except sqlite3.OperationalError:
                 self.log("Database locked. Exiting.")
-                sys.exit(1)                     
-        try: self.dbConnection.commit()
-        except Error as e: self.log(e)
+                self.dbConnection.close()
+        self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")        
+        return self.tryCommit()
 
     def updateNetworks(self, refresh_all=False):
         
@@ -173,6 +200,8 @@ class ShorewallLogAnalyzer:
         else: query = "SELECT address FROM addresses"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
+        self.initDB(self.initDBFilename, self.dbFilename)
+        self.log(str(len(addresses))+" to RDAP query.")
         for address in addresses:
             try:
                 info = getNetwork(address[0])
@@ -182,9 +211,10 @@ class ShorewallLogAnalyzer:
                 self.dbCursor.execute(query,(info[0],address[0]))
             except sqlite3.OperationalError:
                 self.log("Database locked. Exiting.")
-                sys.exit(1)
-        try: self.dbConnection.commit()
-        except Error as e: self.log(e)
+                self.dbConnection.close()
+        self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")      
+        return self.tryCommit()
+        
         
 
 if (__name__ == "__main__"):
