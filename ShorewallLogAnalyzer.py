@@ -6,7 +6,6 @@
 import re
 import sqlite3
 import sys
-from pprint import pprint
 import inspect
 import datetime
 import socket
@@ -41,7 +40,7 @@ class ShorewallLogAnalyzer:
     def tryCommit(self):
         
         try: self.dbConnection.commit()
-        except Error as e:
+        except sqlite3.ProgrammingError as e:
             self.log(e)
             self.dbConnection.rollback()
             self.dbConnection.close()
@@ -60,7 +59,7 @@ class ShorewallLogAnalyzer:
         try:
             initDBFile      = open(initDBFilename,'r')
             self.log(initDBFile)
-        except urllib.error.URLError as e:
+        except Error as e:
             self.log(e)
             return False                 
         query = initDBFile.read()    
@@ -161,7 +160,7 @@ class ShorewallLogAnalyzer:
         query = "SELECT DISTINCT addr FROM (SELECT dst AS addr FROM packets UNION SELECT src AS addr FROM packets AS addr)"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
-        self.log(str(len(addresses))+" addresses to insert in database.")
+        self.log(str(len(addresses))+" addresses.")
         try:
             self.dbCursor.executemany("INSERT OR IGNORE INTO addresses (address) VALUES (?)",addresses)
         except sqlite3.OperationalError:
@@ -172,12 +171,12 @@ class ShorewallLogAnalyzer:
             
     def updateHostnames(self, resolve_all=False):
         
-        if not resolve_all: query = "SELECT address FROM addresses WHERE hostname = '' OR hostname IS NULL"   
+        if not resolve_all: query = "SELECT address FROM addresses WHERE (hostname = '' OR hostname IS NULL) AND hostname <> 'NXDOMAIN'"   
         else: query = "SELECT address FROM addresses"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
         self.initDB(self.initDBFilename, self.dbFilename)
-        self.log(str(len(addresses))+" to resolve.")
+        self.log(str(len(addresses))+" addresses to resolve.")
         for address in addresses:
             self.log(address[0])
             try:
@@ -215,7 +214,26 @@ class ShorewallLogAnalyzer:
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")      
         return self.tryCommit()
         
-        
+    def declareViews(self,  dbFilename, viewDBFilename = 'viewDB.sql',):
+        """ Create the database if not exists. """
+        self.log(viewDBFilename)
+        try:
+            self.dbConnection = sqlite3.connect(dbFilename)
+            self.dbCursor     = self.dbConnection.cursor()
+        except FileNotFoundError as e:
+            self.log(str(e)+". Exiting.")
+            return False            
+        try:
+            viewDBFile      = open(viewDBFilename,'r')
+            self.log(viewDBFile)
+        except Error as e:
+            self.log(e)
+            return False                 
+        query = viewDBFile.read()    
+        self.dbCursor.executescript(query)
+        viewDBFile.close()
+        self.log("Views OK.")
+        return self.tryCommit()    
 
 if (__name__ == "__main__"):
 
@@ -225,6 +243,8 @@ if (__name__ == "__main__"):
     analyzer.updateAddresses()
     analyzer.updateHostnames()
     analyzer.updateNetworks()
+    analyzer.declareViews('./shorewall.sqlite')
+    
     
 
     
