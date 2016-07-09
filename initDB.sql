@@ -10,6 +10,7 @@ dst TEXT,
 proto TEXT,
 spt INT,
 dpt INT,
+mac TEXT,
 PRIMARY KEY(timestamp, host));
 
 CREATE TABLE IF NOT EXISTS networks (

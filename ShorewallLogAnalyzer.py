@@ -63,7 +63,7 @@ class ShorewallLogAnalyzer:
     def tryCommit(self):
         
         try: self.dbConnection.commit()
-        except Error as e:
+        except sqlite3.ProgrammingError as e:
             self.log(e)
             self.dbConnection.rollback()
             self.dbConnection.close()
@@ -83,9 +83,7 @@ class ShorewallLogAnalyzer:
         try:
             initDBFile      = open(initDBFilename,'r')
             self.log(initDBFile)
-
         except Error as e:
-
             self.log(e)
             return False                 
 
@@ -162,7 +160,7 @@ class ShorewallLogAnalyzer:
                 You can add some there, but you need to modify initDB.sql too """
 
             try:    
-                self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',\
+                self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt, mac) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',\
                                      (p['timestamp'],\
                                       p['host'],\
                                       p['chain'],\
@@ -175,6 +173,7 @@ class ShorewallLogAnalyzer:
                                       p['ip']['SPT'],\
                                       p['ip']['DPT'],\
                                       p['ip'].get('MAC',''))) # May be absent.
+
 
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 self.log(str(e)+". Exiting.")
@@ -194,7 +193,6 @@ class ShorewallLogAnalyzer:
         query = "SELECT DISTINCT addr FROM (SELECT dst AS addr FROM packets UNION SELECT src AS addr FROM packets AS addr)"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
-
         self.log(str(len(addresses))+" addresses.")
         try:
             self.dbCursor.executemany("INSERT OR IGNORE INTO addresses (address) VALUES (?)",addresses)
@@ -205,14 +203,14 @@ class ShorewallLogAnalyzer:
         return self.tryCommit()
 
     def updateHostnames(self, resolve_all=False):
-        
+
         if not resolve_all: query = "SELECT address FROM addresses WHERE hostname IS NULL"   
+
         else: query = "SELECT address FROM addresses"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
         self.initDB(self.initDBFilename, self.dbFilename)
         self.log(str(len(addresses))+" addresses to resolve.")
-
         for address in addresses:
             self.log(address[0])
 
@@ -315,12 +313,12 @@ class ShorewallLogAnalyzer:
         self.log("Views OK.")
 
         return self.tryCommit()
-        
+
     def generateContent(self):
 
-        
         generateContent(self)
         return True    
+
 
 if (__name__ == "__main__"):
 
@@ -333,4 +331,4 @@ if (__name__ == "__main__"):
     analyzer.updateEntities()
     analyzer.declareViews('./shorewall.sqlite')
     analyzer.generateContent()
-   
+
