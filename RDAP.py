@@ -16,6 +16,7 @@ except ImportError as e:
     print("Missing module : "+str(e),file=sys.stderr)
     sys.exit(1)
 
+
 class RDAP:
     """ Query RDAP servers. """
 
@@ -65,7 +66,6 @@ class RDAP:
             net = line[0].split('/')[0]
             if (net):
                 self.prefix[str(net)] = (line[1],line[4])
-
 
         return self.prefix  
         

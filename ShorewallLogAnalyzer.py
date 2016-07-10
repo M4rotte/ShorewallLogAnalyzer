@@ -143,7 +143,11 @@ class ShorewallLogAnalyzer:
                         except IndexError:
                             right = ''
                         ip[left] = right
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> f93bd1b... Use csv Python module
                 return {'timestamp': timestamp, 'host': host, 'chain': chain, 'action': action, 'ip': ip}
         else:
             
@@ -171,8 +175,12 @@ class ShorewallLogAnalyzer:
                                       p['ip']['PROTO'],\
                                       p['ip']['SPT'],\
                                       p['ip']['DPT'],\
+<<<<<<< HEAD
                                       p['ip'].get('MAC',''))) # May be absent.
 
+=======
+                                      p['ip'].get('MAC','')))
+>>>>>>> f93bd1b... Use csv Python module
 
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 self.log(str(e)+". Exiting.")
