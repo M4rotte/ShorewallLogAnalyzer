@@ -200,8 +200,6 @@ def generateIndexPage(sla, output_dir = './www/'):
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
-    ret = sla.dbCursor.execute("SELECT address, network_name, network_country, address_name from addresses_view")
-    addresses = ret.fetchall()
     sla.log("Generating index page.")
     md = ''
     sla.log("Counters...")
