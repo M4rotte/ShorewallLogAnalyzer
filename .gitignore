@@ -1,6 +1,7 @@
 *.bak
 *.sqlite
 *.sqlite-journal
+*.csv
 *.log
 __pycache__
 
