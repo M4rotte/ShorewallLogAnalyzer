@@ -129,6 +129,7 @@ def generateNetworkPages(sla, since= '', output_dir = './www/'):
             md += '\n'
         
         md += '## Packets ('+str(len(packets))+')\n'
+
         for p in packets:
             md += ' - '
             for i in range(0,11):
@@ -199,6 +200,8 @@ def generateIndexPage(sla, output_dir = './www/'):
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
+    ret = sla.dbCursor.execute("SELECT address, network_name, network_country, address_name from addresses_view")
+    addresses = ret.fetchall()
     sla.log("Generating index page.")
     md = ''
     sla.log("Counters...")
@@ -236,7 +239,6 @@ def generateIndexPage(sla, output_dir = './www/'):
     f = open(output_dir+'index.html','w')
     f.write(html)
     f.close()           
-
     return True
     
 def generateContent(sla):
@@ -248,6 +250,7 @@ def generateContent(sla):
     generateAddressPages(sla,'60 minute')
     generateNetworkPages(sla,'60 minute')
     generateEntityPages(sla)
+
     generateIndexPage(sla)
     return True
 

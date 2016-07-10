@@ -207,7 +207,6 @@ class ShorewallLogAnalyzer:
     def updateHostnames(self, resolve_all=False):
 
         if not resolve_all: query = "SELECT address FROM addresses WHERE hostname IS NULL"   
-
         else: query = "SELECT address FROM addresses"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
