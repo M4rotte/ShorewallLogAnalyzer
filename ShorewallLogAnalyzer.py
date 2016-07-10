@@ -117,7 +117,7 @@ class ShorewallLogAnalyzer:
                         except IndexError:
                             right = ''
                         ip[left] = right
-                    
+                
                 return {'timestamp': timestamp, 'host': host, 'chain': chain, 'action': action, 'ip': ip}
         else:
             
@@ -144,7 +144,7 @@ class ShorewallLogAnalyzer:
                                       p['ip']['PROTO'],\
                                       p['ip']['SPT'],\
                                       p['ip']['DPT'],\
-                                      p['ip']['MAC']))
+                                      p['ip'].get('MAC','')))
 
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 self.log(str(e)+"Exiting.")

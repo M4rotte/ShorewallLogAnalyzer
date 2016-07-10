@@ -5,6 +5,8 @@ import urllib.request
 import json
 import sys
 import os
+import csv
+import datetime
 
 class RDAP:
     """ Query RDAP servers. """
@@ -15,6 +17,7 @@ class RDAP:
         
         if (URL[-1:] != '/'): URL += '/'
         request    = URL+object_type+'/'+search
+        print(str(datetime.datetime.now())+" RDAP:get: "+request, file=sys.stderr)
         try:
             response   = urllib.request.urlopen(request)
             rawdata = response.read().decode('utf-8')
@@ -48,15 +51,13 @@ class RDAP:
 
         else:
             
-            rawdata = open(ASRFilename,'r').read()  
-
-        split = rawdata.split('\n')
+            rawdata = open(ASRFilename,'r')
+            split = csv.reader(rawdata, delimiter=',', quotechar='"')
         
         for line in split:
-            l = line.split(',')
-            net = l[0].split('/')[0]
+            net = line[0].split('/')[0]
             if (net):
-                self.prefix[str(net)] = (l[1],l[4])
+                self.prefix[str(net)] = (line[1],line[4])
 
         return self.prefix  
         
@@ -67,7 +68,6 @@ class RDAP:
         prefix = search.split('.')[0].zfill(3)
         rdap_url = self.prefix[prefix][1].split('http://')[0]
         name     = self.prefix[prefix][0]
-        
         if (not rdap_url):
             
             return (prefix+"/8", name, '', '', '', '', '', '')
