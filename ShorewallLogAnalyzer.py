@@ -101,7 +101,7 @@ class ShorewallLogAnalyzer:
                     return False
                 host      = left_part[1]
                 data      = split[2]
-                data_split = data.split(':')
+                data_split = data.split(':',2)
                 chain = data_split[0]
                 action = data_split[1]
                 ip_data = ' '.join(data_split[2:])
@@ -132,7 +132,7 @@ class ShorewallLogAnalyzer:
                 Not all of the values of the packet `ip` dict are being used.
                 You can add some there, but you need to modify initDB.sql too """
             try:    
-                self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',\
+                self.dbCursor.execute('INSERT OR IGNORE INTO packets (timestamp, host, chain, action, if_in, if_out, src, dst, proto, spt, dpt, mac) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',\
                                      (p['timestamp'],\
                                       p['host'],\
                                       p['chain'],\
@@ -143,7 +143,8 @@ class ShorewallLogAnalyzer:
                                       p['ip']['DST'],\
                                       p['ip']['PROTO'],\
                                       p['ip']['SPT'],\
-                                      p['ip']['DPT']))
+                                      p['ip']['DPT'],\
+                                      p['ip']['MAC']))
 
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 self.log(str(e)+"Exiting.")
