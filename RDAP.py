@@ -34,7 +34,6 @@ class RDAP:
         except (urllib.error.HTTPError, urllib.error.URLError, socket.timeout) as e:
             print(e,file=sys.stderr)
             return False
-
         return data
     
     def getASR(self):
@@ -93,11 +92,13 @@ class RDAP:
             source         = rdap_url
         except AttributeError:
             return ('','','','','','','','','')
+
         try:
             for e in data['entities']:
                 entities.append(e['handle'])
         except KeyError:
             pass
+
         
         #~ print(handle, name, country, type, start_addr, end_addr, parent_handle, ' '.join(entities), source)    
         return (handle, name, country, type, start_addr, end_addr, parent_handle, ' '.join(entities), source)
@@ -119,8 +120,8 @@ class RDAP:
                 entities.append(e['handle'])
         except KeyError:
             pass
-
         return (handle, vcard, ' '.join(entities), source)
+
 
 rdap = RDAP()
 

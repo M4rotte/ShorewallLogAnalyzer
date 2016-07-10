@@ -24,6 +24,7 @@ except ImportError as e:
 
 from RDAP import getNetwork
 from Utils import is_valid_timestamp
+from Web import generateContent
 
 class ShorewallLogAnalyzer:
     """ Read log file, interprets data and write to database. """
@@ -54,6 +55,7 @@ class ShorewallLogAnalyzer:
         try: 
             self.dbConnection.commit()
             return True
+
         except sqlite3.ProgrammingError as e:
             self.log(e)
             self.dbConnection.rollback()
@@ -63,6 +65,7 @@ class ShorewallLogAnalyzer:
     def tryCommit(self):
         
         try: self.dbConnection.commit()
+
         except sqlite3.ProgrammingError as e:
             self.log(e)
             self.dbConnection.rollback()
@@ -143,11 +146,7 @@ class ShorewallLogAnalyzer:
                         except IndexError:
                             right = ''
                         ip[left] = right
-<<<<<<< HEAD
 
-=======
-                
->>>>>>> f93bd1b... Use csv Python module
                 return {'timestamp': timestamp, 'host': host, 'chain': chain, 'action': action, 'ip': ip}
         else:
             
@@ -175,12 +174,8 @@ class ShorewallLogAnalyzer:
                                       p['ip']['PROTO'],\
                                       p['ip']['SPT'],\
                                       p['ip']['DPT'],\
-<<<<<<< HEAD
                                       p['ip'].get('MAC',''))) # May be absent.
 
-=======
-                                      p['ip'].get('MAC','')))
->>>>>>> f93bd1b... Use csv Python module
 
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 self.log(str(e)+". Exiting.")
@@ -265,7 +260,6 @@ class ShorewallLogAnalyzer:
 
 
     def updateEntities(self, refresh_all=False):
-
         
         query = "SELECT entities, source FROM networks"
         result = self.dbCursor.execute(query)
@@ -318,7 +312,6 @@ class ShorewallLogAnalyzer:
         self.dbCursor.executescript(query)
         viewDBFile.close()
         self.log("Views OK.")
-
         return self.tryCommit()
 
     def generateContent(self):
@@ -338,4 +331,3 @@ if (__name__ == "__main__"):
     analyzer.updateEntities()
     analyzer.declareViews('./shorewall.sqlite')
     analyzer.generateContent()
-

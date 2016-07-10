@@ -7,6 +7,7 @@ import time
 import urllib.parse
 import shutil
 
+
 def generateDirs(sla, output_dir = './www/'):
 
     try:
@@ -38,6 +39,7 @@ def navlinks():
     return ret
 
 def linkCSS(path = './'):
+
     
     return '<link rel="stylesheet" href="'+path+'default.css">\n'
 
@@ -234,11 +236,11 @@ def generateIndexPage(sla, output_dir = './www/'):
     f = open(output_dir+'index.html','w')
     f.write(html)
     f.close()           
-  
+
     return True
     
 def generateContent(sla):
-    
+
     generateDirs(sla)
     populateDirs(sla)
     #~ generateAddressPages(sla)
@@ -248,3 +250,4 @@ def generateContent(sla):
     generateEntityPages(sla)
     generateIndexPage(sla)
     return True
+
