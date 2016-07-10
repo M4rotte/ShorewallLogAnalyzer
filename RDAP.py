@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
+<<<<<<< HEAD
 try:
     
     import sys
@@ -16,11 +17,18 @@ except ImportError as e:
     print("Missing module : "+str(e),file=sys.stderr)
     sys.exit(1)
 
+=======
+import urllib.request
+import json
+import sys
+import os
+>>>>>>> 3b8a28d... Don't query RDAP for reserved addresses.
 
 class RDAP:
     """ Query RDAP servers. """
     
     
+
     def get(self, object_type, search, URL = 'http://rdap.db.ripe.net/'):
         """ Query RDAP server. Return as JSON. """
         
@@ -59,7 +67,7 @@ class RDAP:
                 print(e,file=sys.stderr)
 
         else:
-            
+
             rawdata = open(ASRFilename,'r')
             split = csv.reader(rawdata, delimiter=',', quotechar='"')
         
@@ -67,6 +75,7 @@ class RDAP:
             net = line[0].split('/')[0]
             if (net):
                 self.prefix[str(net)] = (line[1],line[4])
+
 
         return self.prefix  
         
@@ -125,7 +134,6 @@ class RDAP:
 
 rdap = RDAP()
 
-
 def getNetwork(search):
     
     return rdap.getNetwork(search)
@@ -142,7 +150,6 @@ def getEntity(search, rdap_url):
 if (__name__ == "__main__"):
     
     try:
-
         #~ rdap.getASR()
         print(rdap.getNetwork(sys.argv[1]))
         #~ pprint(rdap.getEntity(sys.argv[1],sys.argv[2]))  
