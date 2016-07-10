@@ -84,7 +84,8 @@ class ShorewallLogAnalyzer:
                     
         except AttributeError:
             self.log("Nothing to read !")
-
+        
+        self.log(str(len(self.packets))+" packets.")
         return(self.packets)
   
     
@@ -126,7 +127,6 @@ class ShorewallLogAnalyzer:
     def updatePackets(self):
         """ Write "packets" to the database. """
         
-        self.log(str(len(self.packets))+" packets to insert in database.")
         for p in self.packets:
             """ Insert packet or ignore silently (`timestamp` is the primary key). 
                 Not all of the values of the packet `ip` dict are being used.

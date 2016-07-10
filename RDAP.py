@@ -9,12 +9,12 @@ import os
 class RDAP:
     """ Query RDAP servers. """
     
-    URL = 'http://rdap.db.ripe.net/'
     
-    def get(self, object_type, search):
+    def get(self, object_type, search, URL = 'http://rdap.db.ripe.net/'):
         """ Query RDAP server. Return as JSON. """
         
-        request    = self.URL+object_type+'/'+search
+        if (URL[-1:] != '/'): URL += '/'
+        request    = URL+object_type+'/'+search
         try:
             response   = urllib.request.urlopen(request)
             rawdata = response.read().decode('utf-8')
@@ -65,7 +65,7 @@ class RDAP:
         
         self.getASR()
         prefix = search.split('.')[0].zfill(3)
-        rdap_url = self.prefix[prefix][1]
+        rdap_url = self.prefix[prefix][1].split('http://')[0]
         name     = self.prefix[prefix][0]
         
         if (not rdap_url):
@@ -73,7 +73,7 @@ class RDAP:
             return (prefix+"/8", name, '', '', '', '', '', '')
             
         entities = []
-        data = self.get('ip',search)
+        data = self.get('ip',search,rdap_url)
         handle         = data.get('handle', '')
         name           = data.get('name', '')
         country        = data.get('country','')
