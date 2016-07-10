@@ -39,7 +39,9 @@ class ShorewallLogAnalyzer:
 
     def tryCommit(self):
         
-        try: self.dbConnection.commit()
+        try: 
+            self.dbConnection.commit()
+            return True
         except sqlite3.ProgrammingError as e:
             self.log(e)
             self.dbConnection.rollback()

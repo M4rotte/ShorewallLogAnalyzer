@@ -62,7 +62,7 @@ class RDAP:
         return self.prefix  
         
     def getNetwork(self, search):
-        """ Return a tuple from the JSON returned. """
+        """ Return a tuple from the JSON response. """
         
         self.getASR()
         prefix = search.split('.')[0].zfill(3)
