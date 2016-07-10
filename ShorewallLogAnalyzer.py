@@ -112,7 +112,6 @@ class ShorewallLogAnalyzer:
             self.log("Nothing to read !")
         
         self.log(str(len(self.packets))+" packets.")
-
         return(self.packets)
   
     

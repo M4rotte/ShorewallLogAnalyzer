@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-<<<<<<< HEAD
 try:
     
     import sys
@@ -17,17 +16,8 @@ except ImportError as e:
     print("Missing module : "+str(e),file=sys.stderr)
     sys.exit(1)
 
-=======
-import urllib.request
-import json
-import sys
-import os
->>>>>>> 3b8a28d... Don't query RDAP for reserved addresses.
-
 class RDAP:
     """ Query RDAP servers. """
-    
-    
 
     def get(self, object_type, search, URL = 'http://rdap.db.ripe.net/'):
         """ Query RDAP server. Return as JSON. """
