@@ -84,7 +84,7 @@ class RDAP:
             parent_handle  = data.get('parent_handle','')
             source         = rdap_url
         except AttributeError:
-            return False
+            return ('','','','','','','','','')
         try:
             for e in data['entities']:
                 entities.append(e['handle'])

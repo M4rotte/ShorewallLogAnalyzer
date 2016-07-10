@@ -32,5 +32,9 @@ network TEXT,
 PRIMARY KEY (address),
 FOREIGN KEY(network) REFERENCES networs(handle));
 
-
+CREATE TABLE IF NOT EXISTS entities (
+handle TEXT NOT NULL,
+vcard TEXT,
+entities TEXT,
+PRIMARY KEY (handle));
 

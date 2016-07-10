@@ -52,7 +52,6 @@ class ShorewallLogAnalyzer:
     
     def initDB(self, initDBFilename, dbFilename):
         """ Create the database if not exists. """
-        self.log(initDBFilename)
         try:
             self.dbConnection = sqlite3.connect(dbFilename)
             self.dbCursor     = self.dbConnection.cursor()
@@ -147,7 +146,7 @@ class ShorewallLogAnalyzer:
                                       p['ip']['PROTO'],\
                                       p['ip']['SPT'],\
                                       p['ip']['DPT'],\
-                                      p['ip'].get('MAC','')))
+                                      p['ip'].get('MAC',''))) # May be absent.
 
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 self.log(str(e)+". Exiting.")
