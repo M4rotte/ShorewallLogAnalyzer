@@ -4,4 +4,4 @@
 *.csv
 *.log
 __pycache__
-
+www/*

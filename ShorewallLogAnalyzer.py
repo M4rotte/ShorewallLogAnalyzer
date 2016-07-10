@@ -13,6 +13,7 @@ import urllib
 
 from RDAP import getNetwork
 from Utils import is_valid_timestamp
+from Web import generateContent
 
 class ShorewallLogAnalyzer:
     """ Read log file, interprets data and write to database. """
@@ -149,8 +150,9 @@ class ShorewallLogAnalyzer:
                                       p['ip'].get('MAC','')))
 
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
-                self.log(str(e)+"Exiting.")
+                self.log(str(e)+". Exiting.")
                 self.dbConnection.close()
+                return False
             except KeyError:
                 continue
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")
@@ -174,7 +176,7 @@ class ShorewallLogAnalyzer:
             
     def updateHostnames(self, resolve_all=False):
         
-        if not resolve_all: query = "SELECT address FROM addresses WHERE (hostname = '' OR hostname IS NULL) AND hostname <> 'NXDOMAIN'"   
+        if not resolve_all: query = "SELECT address FROM addresses WHERE hostname IS NULL"   
         else: query = "SELECT address FROM addresses"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
@@ -207,13 +209,13 @@ class ShorewallLogAnalyzer:
         for address in addresses:
             try:
                 info = getNetwork(address[0])
-                query = "INSERT OR IGNORE INTO networks (handle,name,country,type,start_addr,end_addr,parent_handle,entities) VALUES (?,?,?,?,?,?,?,?)"
+                query = "INSERT OR IGNORE INTO networks (handle,name,country,type,start_addr,end_addr,parent_handle,entities,source) VALUES (?,?,?,?,?,?,?,?,?)"
                 self.dbCursor.execute(query,info)
                 query = "UPDATE addresses SET network = ?  WHERE address = ?"
                 self.dbCursor.execute(query,(info[0],address[0]))
-            except sqlite3.OperationalError:
-                self.log("Database locked. Exiting.")
-                self.dbConnection.close()
+            except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
+                self.log(e)
+                continue
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")      
         return self.tryCommit()
         
@@ -236,7 +238,12 @@ class ShorewallLogAnalyzer:
         self.dbCursor.executescript(query)
         viewDBFile.close()
         self.log("Views OK.")
-        return self.tryCommit()    
+        return self.tryCommit()
+        
+    def generateContent(self):
+        
+        generateContent(self)
+        return True    
 
 if (__name__ == "__main__"):
 
@@ -247,6 +254,7 @@ if (__name__ == "__main__"):
     analyzer.updateHostnames()
     analyzer.updateNetworks()
     analyzer.declareViews('./shorewall.sqlite')
+    analyzer.generateContent()
     
     
 

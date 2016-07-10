@@ -22,6 +22,7 @@ start_addr TEXT,
 end_addr TEXT,
 parent_handle TEXT,
 entities TEXT,
+source TEXT,
 PRIMARY KEY (handle));
 
 CREATE TABLE IF NOT EXISTS addresses (

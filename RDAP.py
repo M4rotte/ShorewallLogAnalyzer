@@ -25,7 +25,7 @@ class RDAP:
             data  = json.loads(rawdata)        
         except (urllib.error.HTTPError, urllib.error.URLError) as e:
             print(e,file=sys.stderr)
-            data = {}
+            return False
         
         return data
     
@@ -74,21 +74,25 @@ class RDAP:
             
         entities = []
         data = self.get('ip',search,rdap_url)
-        handle         = data.get('handle', '')
-        name           = data.get('name', '')
-        country        = data.get('country','')
-        type           = data.get('type','')
-        start_addr     = data.get('start_addr','')
-        end_addr       = data.get('end_addr','')
-        parent_handle  = data.get('parent_handle','')
-        
+        try:
+            handle         = data.get('handle', '')
+            name           = data.get('name', '')
+            country        = data.get('country','')
+            type           = data.get('type','')
+            start_addr     = data.get('start_addr','')
+            end_addr       = data.get('end_addr','')
+            parent_handle  = data.get('parent_handle','')
+            source         = rdap_url
+        except AttributeError:
+            return False
         try:
             for e in data['entities']:
                 entities.append(e['handle'])
         except KeyError:
             pass
-            
-        return (handle, name, country, type, start_addr, end_addr, parent_handle, ' '.join(entities))
+        
+        #~ print(handle, name, country, type, start_addr, end_addr, parent_handle, ' '.join(entities), source)    
+        return (handle, name, country, type, start_addr, end_addr, parent_handle, ' '.join(entities), source)
 
 rdap = RDAP()
 

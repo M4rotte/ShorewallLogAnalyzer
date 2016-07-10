@@ -29,8 +29,8 @@ ORDER BY nb_packets DESC
 ;
 
 CREATE VIEW IF NOT EXISTS addresses_view
-(address, network_name, network_country) AS SELECT
-address, name, country FROM addresses
+(address, network_name, network_country, address_name) AS SELECT
+address, name, country, hostname FROM addresses
 INNER JOIN networks ON addresses.network=networks.handle
 ;
 
