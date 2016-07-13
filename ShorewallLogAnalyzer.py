@@ -205,7 +205,7 @@ class ShorewallLogAnalyzer:
 
     def updateNetworks(self, refresh_all=False):
         
-        if not refresh_all: query = "SELECT address FROM addresses WHERE addresses.network IS NULL"
+        if not refresh_all: query = "SELECT address FROM addresses WHERE addresses.network IS NULL OR addresses.network = ''"
         else: query = "SELECT address FROM addresses"
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()

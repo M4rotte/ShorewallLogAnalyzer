@@ -10,6 +10,7 @@ try:
     import csv
     import datetime
     from pprint import pprint
+    import socket
 
 except ImportError as e:
     print("Missing module : "+str(e),file=sys.stderr)
@@ -26,11 +27,11 @@ class RDAP:
         request    = URL+object_type+'/'+search
         print(str(datetime.datetime.now())+" RDAP:get: "+request, file=sys.stderr)
         try:
-            response   = urllib.request.urlopen(request)
+            response   = urllib.request.urlopen(request, timeout=10)
             rawdata = response.read().decode('utf-8')
             response.close()
             data  = json.loads(rawdata)        
-        except (urllib.error.HTTPError, urllib.error.URLError) as e:
+        except (urllib.error.HTTPError, urllib.error.URLError, socket.timeout) as e:
             print(e,file=sys.stderr)
             return False
         
@@ -138,8 +139,8 @@ if (__name__ == "__main__"):
     
     try:
         #~ rdap.getASR()
-        #~ print(rdap.getNetwork(sys.argv[1]))
-        pprint(rdap.getEntity(sys.argv[1],sys.argv[2]))  
+        print(rdap.getNetwork(sys.argv[1]))
+        #~ pprint(rdap.getEntity(sys.argv[1],sys.argv[2]))  
     except IndexError:
         pass
         

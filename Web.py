@@ -92,6 +92,7 @@ def generateNetworkPages(sla, output_dir = './www/'):
         html += markdown.markdown(md)
         html += HTML_END
         name = network[0].replace(' ','_')
+        if (not name): name = "0"
         f = open(output_dir+'networks/'+name+'.html','w')
         f.write(html)
         f.close() 
@@ -109,6 +110,7 @@ def generateIndexPage(sla, output_dir = './www/'):
     networks = ret.fetchall() 
     md += '## Networks\n'
     for network in networks:
+        if (not network[0]): continue
         network_ = network[0].replace(' ','_')
         network_link='['+network[0]+'](./networks/'+network_+'.html) '
         md += ' - '+network_link+' '+' '.join(network[1:-1])
