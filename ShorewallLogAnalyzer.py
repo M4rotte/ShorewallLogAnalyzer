@@ -244,14 +244,12 @@ class ShorewallLogAnalyzer:
         else: query = "SELECT * FROM entities"
         result = self.dbCursor.execute(query)
         entities = result.fetchall()
-        self.initDB(self.initDBFilename, self.dbFilename)
         self.log(str(len(entities))+" RDAP queries.")
         for entity in entities:
             try:
-                info = getEntity(entity[0],entity[3])
-                print(info)
+                if(entity[0]): info = getEntity(entity[0],entity[3])
+                else: continue
                 query = "UPDATE entities SET vcard = ?, entities = ?  WHERE handle = ?"
-                print(query,(str(info[1]),info[2],entity[1]))
                 self.dbCursor.execute(query,(str(info[1]),info[2],entity[0]))
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 self.log(e)
