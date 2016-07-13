@@ -22,7 +22,7 @@ def generateAddressPages(sla, output_dir = './www/'):
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
-    ret = sla.dbCursor.execute("SELECT address, network_name, network_country FROM addresses_view")
+    ret = sla.dbCursor.execute("SELECT address, network_name, network_country, address_name FROM addresses_view")
     addresses = ret.fetchall()
 
     sla.log("Generating "+str(len(addresses))+" address pages.")
@@ -34,7 +34,7 @@ def generateAddressPages(sla, output_dir = './www/'):
             md = '# '+' '.join(address[0:4])+'\n'
         except TypeError:
             md = '# '+address[0]+'\n'    
-        md += '## Packets\n'
+        md += '## Packets ('+str(len(packets))+')\n'
         for p in packets:
             md += ' - '
             for i in range(0,11):
@@ -73,11 +73,23 @@ def generateNetworkPages(sla, output_dir = './www/'):
         query += r'INNER JOIN networks ON networks.handle=addresses.network '
         query += r'WHERE networks.handle = ? '
         query += r'ORDER BY chain, action, timestamp DESC '
-        
         ret = sla.dbCursor.execute(query, (handle, handle))
         packets = ret.fetchall()
+        
+        query = r'SELECT entities FROM networks WHERE handle = "'+handle+'"'
+        ret = sla.dbCursor.execute(query)
+        entities = ret.fetchone()
+        
         md = '# '+' '.join(network[0:4])+'\n'
-        md += '## Packets\n'
+        
+        if (entities):
+            md += '## Entities \n'
+            for es in entities:
+                for e in es.split(' '):
+                    md += '['+e+'](../entities/'+e+'.html) '
+            md += '\n'
+        
+        md += '## Packets ('+str(len(packets))+')\n'
         for p in packets:
             md += ' - '
             for i in range(0,11):
@@ -88,7 +100,7 @@ def generateNetworkPages(sla, output_dir = './www/'):
                 else:   
                     md += str(p[i])+' '
             md += '\n'
-        html = HTML_START 
+        html = HTML_START
         html += markdown.markdown(md)
         html += HTML_END
         name = network[0].replace(' ','_')
@@ -96,6 +108,49 @@ def generateNetworkPages(sla, output_dir = './www/'):
         f = open(output_dir+'networks/'+name+'.html','w')
         f.write(html)
         f.close() 
+
+def generateEntityPages(sla, output_dir = './www/'):
+
+    HTML_START = '<html>\n<body>\n'
+    HTML_END   = '\n</body>\n</html>\n'
+
+    sla.initDB(sla.initDBFilename,sla.dbFilename)
+    ret = sla.dbCursor.execute("SELECT handle,vcard FROM entities")
+    entities = ret.fetchall()
+
+    sla.log("Generating "+str(len(entities))+" entity pages.")
+    for entity in entities:
+        md = '# '+entity[0]+'\n'
+        info = ''
+        if (entity[1]):
+            try:
+                #~ md += entity[1]+'\n'
+                e = eval(entity[1])
+                fn = e[1][1][3]
+                kind = e[1][2][3]
+                try:
+                    addr1 = e[1][3][1]['label'].replace('\n','<br />')
+                except KeyError:
+                    try:
+                        addr1 = e[1][4][1]['label'].replace('\n','<br />')
+                    except KeyError: pass
+                #~ try:    
+                    #~ addr2 = ' '.join(e[1][3][3][0:]).strip()
+                #~ except TypeError: pass    
+                addr2 = ''
+                for i in e[1][5:]:
+                    info += ' - '+str(i[0])+': '+str(i[3])+'\n'
+                md += str(fn)+' ('+str(kind)+')<br /> \n'
+                md += addr1+'<br />\n'+addr2+'<br />\n'
+                md += '\n'+info+'\n'
+            except IndexError: continue        
+        md += '\n'
+        html = HTML_START 
+        html += markdown.markdown(md)
+        html += HTML_END
+        f = open(output_dir+'entities/'+urllib.parse.quote(entity[0])+'.html','w')
+        f.write(html)
+        f.close()      
 
 def generateIndexPage(sla, output_dir = './www/'):
 
@@ -108,7 +163,7 @@ def generateIndexPage(sla, output_dir = './www/'):
     sla.log("Networks...")
     ret = sla.dbCursor.execute("SELECT * FROM networks;")
     networks = ret.fetchall() 
-    md += '## Networks\n'
+    md += '## Networks ('+str(len(networks))+')\n'
     for network in networks:
         if (not network[0]): continue
         network_ = network[0].replace(' ','_')
@@ -118,7 +173,7 @@ def generateIndexPage(sla, output_dir = './www/'):
     sla.log("Addresses...")    
     ret = sla.dbCursor.execute("SELECT address, network_name, network_country FROM addresses_view")
     addresses = ret.fetchall()      
-    md += '## Addresses\n'
+    md += '## Addresses ('+str(len(addresses))+')\n'
     for address in addresses:
         address_link='['+address[0]+'](./addresses/'+address[0]+'.html) '
         try:
@@ -140,5 +195,6 @@ def generateContent(sla):
     generateDirs(sla)
     generateAddressPages(sla)
     generateNetworkPages(sla)
+    generateEntityPages(sla)
     generateIndexPage(sla)
     return True
