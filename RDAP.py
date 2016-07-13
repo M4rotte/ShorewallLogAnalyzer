@@ -12,7 +12,6 @@ try:
     from pprint import pprint
     import socket
 
-
 except ImportError as e:
     print("Missing module : "+str(e),file=sys.stderr)
     sys.exit(1)
@@ -141,7 +140,6 @@ if (__name__ == "__main__"):
         #~ rdap.getASR()
         print(rdap.getNetwork(sys.argv[1]))
         #~ pprint(rdap.getEntity(sys.argv[1],sys.argv[2]))  
-
     except IndexError:
         pass
         
