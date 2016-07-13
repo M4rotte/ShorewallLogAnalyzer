@@ -38,7 +38,6 @@ SELECT COUNT(*) FROM addresses) AS addresses, (
 SELECT COUNT(*) FROM entities) AS entities
 ;
 
-
 CREATE VIEW IF NOT EXISTS objects
 (addr,network_name,network_country, network_entities, network_handle, address_name, timestamp) AS
 SELECT
@@ -46,6 +45,7 @@ src AS addr,network_name,network_country, network_entities, network_handle, src,
 UNION SELECT
 dst AS addr,network_name,network_country, network_entities, network_handle, dst, timestamp FROM packets INNER JOIN addresses_view ON dst=address
 ;
+
 
 
 

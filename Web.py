@@ -195,7 +195,7 @@ def generateEntityPages(sla, output_dir = './www/'):
 
 def generateNetworkPages(sla, output_dir = './www/'):
 
-    HTML_START = '<html>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
@@ -214,11 +214,23 @@ def generateNetworkPages(sla, output_dir = './www/'):
         query += r'INNER JOIN networks ON networks.handle=addresses.network '
         query += r'WHERE networks.handle = ? '
         query += r'ORDER BY chain, action, timestamp DESC '
-        
         ret = sla.dbCursor.execute(query, (handle, handle))
         packets = ret.fetchall()
+        
+        query = r'SELECT entities FROM networks WHERE handle = "'+handle+'"'
+        ret = sla.dbCursor.execute(query)
+        entities = ret.fetchone()
+        
         md = '# '+' '.join(network[0:4])+'\n'
-        md += '## Packets\n'
+        
+        if (entities):
+            md += '## Entities \n'
+            for es in entities:
+                for e in es.split(' '):
+                    md += '['+e+'](../entities/'+e+'.html) '
+            md += '\n'
+        
+        md += '## Packets ('+str(len(packets))+')\n'
         for p in packets:
             md += ' - '
             for i in range(0,11):
@@ -229,7 +241,7 @@ def generateNetworkPages(sla, output_dir = './www/'):
                 else:   
                     md += str(p[i])+' '
             md += '\n'
-        html = HTML_START 
+        html = HTML_START
         html += markdown.markdown(md)
         html += HTML_END
         name = network[0].replace(' ','_')
@@ -237,6 +249,50 @@ def generateNetworkPages(sla, output_dir = './www/'):
         f = open(output_dir+'networks/'+name+'.html','w')
         f.write(html)
         f.close() 
+
+def generateEntityPages(sla, output_dir = './www/'):
+
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
+    HTML_END   = '\n</body>\n</html>\n'
+
+    sla.initDB(sla.initDBFilename,sla.dbFilename)
+    ret = sla.dbCursor.execute("SELECT handle,vcard FROM entities")
+    entities = ret.fetchall()
+
+    sla.log("Generating "+str(len(entities))+" entity pages.")
+    for entity in entities:
+        md = '# '+entity[0]+'\n'
+        info = ''
+        if (entity[1]):
+            try:
+                #~ md += entity[1]+'\n'
+                e = eval(entity[1])
+                fn = e[1][1][3]
+                kind = e[1][2][3]
+                try:
+                    addr1 = e[1][3][1]['label'].replace('\n','<br />')
+                except KeyError:
+                    try:
+                        addr1 = e[1][4][1]['label'].replace('\n','<br />')
+                    except KeyError: pass
+                # May contain the address, but maybe something else.
+                #~ try:    
+                    #~ addr2 = ' '.join(e[1][3][3][0:]).strip() 
+                #~ except TypeError: pass    
+                addr2 = ''
+                for i in e[1][5:]:
+                    info += ' - '+str(i[0])+': '+str(i[3])+'\n'
+                md += str(fn)+' ('+str(kind)+')<br /> \n'
+                md += addr1+'<br />\n'+addr2+'<br />\n'
+                md += '\n'+info+'\n'
+            except IndexError: continue        
+        md += '\n'
+        html = HTML_START 
+        html += markdown.markdown(md)
+        html += HTML_END
+        f = open(output_dir+'entities/'+urllib.parse.quote(entity[0])+'.html','w')
+        f.write(html)
+        f.close()      
 
 def generateIndexPage(sla, output_dir = './www/'):
 
