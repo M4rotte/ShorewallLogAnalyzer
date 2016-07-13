@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-import urllib.request
-import json
-import sys
-import os
-import csv
-import datetime
+try:
+    
+    import sys
+    import urllib.request
+    import json
+    import os
+    import csv
+    import datetime
+    from pprint import pprint
+
+except ImportError as e:
+    print("Missing module : "+str(e),file=sys.stderr)
+    sys.exit(1)
 
 class RDAP:
     """ Query RDAP servers. """
@@ -94,6 +101,25 @@ class RDAP:
         #~ print(handle, name, country, type, start_addr, end_addr, parent_handle, ' '.join(entities), source)    
         return (handle, name, country, type, start_addr, end_addr, parent_handle, ' '.join(entities), source)
 
+    def getEntity(self, search, rdap_url):
+        """ Return a tuple from the JSON response. """
+
+        entities = []
+        data = self.get('entity',search,rdap_url)
+        try:
+            handle         = data.get('handle', '')
+            vcard          = data.get('vcardArray', '')
+            source         = rdap_url
+        except AttributeError:
+            return ('','','','','','','','','')
+        try:
+            for e in data['entities']:
+                entities.append(e['handle'])
+        except KeyError:
+            pass
+        
+        return (handle, vcard, ' '.join(entities), source)
+
 rdap = RDAP()
 
 def getNetwork(search):
@@ -103,12 +129,17 @@ def getNetwork(search):
 def getASR():
     
     return rdap.getASR() 
+
+def getEntity(search, rdap_url):
+    
+    return rdap.getEntity(search, rdap_url)
  
 if (__name__ == "__main__"):
     
     try:
-        rdap.getASR()
-        print(rdap.getNetwork(sys.argv[1]))
+        #~ rdap.getASR()
+        #~ print(rdap.getNetwork(sys.argv[1]))
+        pprint(rdap.getEntity(sys.argv[1],sys.argv[2]))  
     except IndexError:
         pass
         

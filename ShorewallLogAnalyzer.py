@@ -3,17 +3,23 @@
 
 """ShorewallLogAnalyzer.py: Analyze Shorewall logs."""
 
-import re
-import sqlite3
-import sys
-import inspect
-import datetime
-import socket
-import urllib
+try:
 
-from RDAP import getNetwork
-from Utils import is_valid_timestamp
-from Web import generateContent
+    import sys
+    import re
+    import sqlite3
+    import inspect
+    import datetime
+    import socket
+    import urllib
+
+    from RDAP import getNetwork, getEntity
+    from Utils import is_valid_timestamp
+    from Web import generateContent
+
+except ImportError as e:
+    print("Missing module : "+str(e),file=sys.stderr)
+    sys.exit(1)
 
 class ShorewallLogAnalyzer:
     """ Read log file, interprets data and write to database. """
@@ -23,7 +29,7 @@ class ShorewallLogAnalyzer:
     packets        = []
 
     def log(self,message = ''):
-        """ Handy logging function. """
+        """ Logging function. """
         if (message != ''): sep = ':'
         else: sep = ''
         try:
@@ -194,8 +200,8 @@ class ShorewallLogAnalyzer:
             except sqlite3.OperationalError:
                 self.log("Database locked. Exiting.")
                 self.dbConnection.close()
-        self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")        
-        return self.tryCommit()
+        self.tryCommit()        
+        return True
 
     def updateNetworks(self, refresh_all=False):
         
@@ -204,7 +210,7 @@ class ShorewallLogAnalyzer:
         result = self.dbCursor.execute(query)
         addresses = result.fetchall()
         self.initDB(self.initDBFilename, self.dbFilename)
-        self.log(str(len(addresses))+" to RDAP query.")
+        self.log(str(len(addresses))+" RDAP queries.")
         for address in addresses:
             try:
                 info = getNetwork(address[0])
@@ -215,8 +221,44 @@ class ShorewallLogAnalyzer:
             except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
                 self.log(e)
                 continue
-        self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")      
-        return self.tryCommit()
+        self.tryCommit()        
+        return True
+
+    def updateEntities(self, refresh_all=False):
+        
+        query = "SELECT entities, source FROM networks"
+        result = self.dbCursor.execute(query)
+        entities = result.fetchall()
+        self.initDB(self.initDBFilename, self.dbFilename)
+        for entities_ in entities:
+            for entity in entities_[0].split(' '):
+                try:
+                    query = "INSERT OR IGNORE INTO entities (handle,source) VALUES (?,?)"
+                    self.dbCursor.execute(query,(entity,entities_[1]))
+                except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
+                    self.log(e)
+                    continue
+        self.tryCommit()
+        
+        if not refresh_all: query = "SELECT * FROM entities WHERE entities.vcard IS NULL"
+        else: query = "SELECT * FROM entities"
+        result = self.dbCursor.execute(query)
+        entities = result.fetchall()
+        self.initDB(self.initDBFilename, self.dbFilename)
+        self.log(str(len(entities))+" RDAP queries.")
+        for entity in entities:
+            try:
+                info = getEntity(entity[0],entity[3])
+                print(info)
+                query = "UPDATE entities SET vcard = ?, entities = ?  WHERE handle = ?"
+                print(query,(str(info[1]),info[2],entity[1]))
+                self.dbCursor.execute(query,(str(info[1]),info[2],entity[0]))
+            except (sqlite3.OperationalError, sqlite3.ProgrammingError) as e:
+                self.log(e)
+                continue
+        self.tryCommit()             
+        return True
+
         
     def declareViews(self,  dbFilename, viewDBFilename = 'viewDB.sql',):
         """ Create the database if not exists. """
@@ -252,6 +294,7 @@ if (__name__ == "__main__"):
     analyzer.updateAddresses()
     analyzer.updateHostnames()
     analyzer.updateNetworks()
+    analyzer.updateEntities()
     analyzer.declareViews('./shorewall.sqlite')
     analyzer.generateContent()
     

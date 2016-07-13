@@ -36,5 +36,6 @@ CREATE TABLE IF NOT EXISTS entities (
 handle TEXT NOT NULL,
 vcard TEXT,
 entities TEXT,
+source TEXT,
 PRIMARY KEY (handle));
 
