@@ -12,10 +12,10 @@ try:
     from pprint import pprint
     import socket
 
+
 except ImportError as e:
     print("Missing module : "+str(e),file=sys.stderr)
     sys.exit(1)
-
 
 class RDAP:
     """ Query RDAP servers. """
@@ -92,7 +92,6 @@ class RDAP:
             source         = rdap_url
         except AttributeError:
             return ('','','','','','','','','')
-
         try:
             for e in data['entities']:
                 entities.append(e['handle'])
@@ -114,14 +113,12 @@ class RDAP:
             source         = rdap_url
         except AttributeError:
             return ('','','','','','','','','')
-
         try:
             for e in data['entities']:
                 entities.append(e['handle'])
         except KeyError:
             pass
         return (handle, vcard, ' '.join(entities), source)
-
 
 rdap = RDAP()
 

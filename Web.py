@@ -5,8 +5,10 @@ import os
 import markdown
 import time
 import urllib.parse
+<<<<<<< HEAD
 import shutil
-
+=======
+>>>>>>> ac3058a... Network pages
 
 def generateDirs(sla, output_dir = './www/'):
 
@@ -52,11 +54,17 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
     HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('../')+linkCSS('../')+'</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
+<<<<<<< HEAD
+
     sla.initDB(sla.initDBFilename,sla.dbFilename)
     if (not since):
         ret = sla.dbCursor.execute("SELECT address, network_name, network_country, address_name FROM addresses_view")
     else:
         ret = sla.dbCursor.execute("SELECT DISTINCT addr, address_name FROM objects WHERE timestamp > strftime('%s','now','-"+since+"')")   
+=======
+    sla.initDB(sla.initDBFilename,sla.dbFilename)
+    ret = sla.dbCursor.execute("SELECT address, network_name, network_country FROM addresses_view")
+>>>>>>> ac3058a... Network pages
     addresses = ret.fetchall()
 
     sla.log("Generating "+str(len(addresses))+" address pages.")
@@ -65,11 +73,18 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
         ret = sla.dbCursor.execute(query, (address[0], address[0]))
         packets = ret.fetchall()
         try:
+<<<<<<< HEAD
             md = '# '+navlinks()
             md += ' '.join(address[0:])+'\n'
         except TypeError:
             md = '# '+navlinks()+address[0:]+'\n'    
         md += '## Packets ('+str(len(packets))+')\n'
+=======
+            md = '# '+' '.join(address[0:4])+'\n'
+        except TypeError:
+            md = '# '+address[0]+'\n'    
+        md += '## Packets\n'
+>>>>>>> ac3058a... Network pages
         for p in packets:
             md += ' - '
             for i in range(0,11):
@@ -84,6 +99,7 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
         html += markdown.markdown(md)
         html += HTML_END
         f = open(output_dir+'addresses/'+urllib.parse.quote(address[0])+'.html','w')
+<<<<<<< HEAD
         f.write(html)
         f.close()      
 
@@ -191,8 +207,54 @@ def generateEntityPages(sla, output_dir = './www/'):
         html += HTML_END
         name = urllib.parse.quote(entity[0])
         f = open(output_dir+'entities/'+name+'.html','w')
+=======
+>>>>>>> ac3058a... Network pages
         f.write(html)
         f.close()      
+
+def generateNetworkPages(sla, output_dir = './www/'):
+
+    HTML_START = '<html>\n<body>\n'
+    HTML_END   = '\n</body>\n</html>\n'
+
+    sla.initDB(sla.initDBFilename,sla.dbFilename)
+    ret = sla.dbCursor.execute("SELECT * FROM networks")
+    networks = ret.fetchall()
+
+    sla.log("Generating "+str(len(networks))+" network pages.")
+    for network in networks:
+        handle = network[0]
+        query  = r'SELECT *,networks.handle FROM packets '
+        query += r'INNER JOIN addresses ON addresses.address=packets.src '
+        query += r'INNER JOIN networks ON networks.handle=addresses.network '
+        query += r'WHERE networks.handle = ? '
+        query += r'UNION SELECT *,networks.handle FROM packets '
+        query += r'INNER JOIN addresses ON addresses.address=packets.dst '
+        query += r'INNER JOIN networks ON networks.handle=addresses.network '
+        query += r'WHERE networks.handle = ? '
+        query += r'ORDER BY chain, action, timestamp DESC '
+        
+        ret = sla.dbCursor.execute(query, (handle, handle))
+        packets = ret.fetchall()
+        md = '# '+' '.join(network[0:4])+'\n'
+        md += '## Packets\n'
+        for p in packets:
+            md += ' - '
+            for i in range(0,11):
+                if i == 0:
+                    md += time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(p[i]))+' '
+                elif (i == 6 or i == 7 or i == 1):
+                    md += '['+p[i]+'](../addresses/'+urllib.parse.quote(p[i])+'.html) '    
+                else:   
+                    md += str(p[i])+' '
+            md += '\n'
+        html = HTML_START 
+        html += markdown.markdown(md)
+        html += HTML_END
+        name = network[0].replace(' ','_')
+        f = open(output_dir+'networks/'+name+'.html','w')
+        f.write(html)
+        f.close() 
 
 def generateIndexPage(sla, output_dir = './www/'):
 
@@ -215,7 +277,10 @@ def generateIndexPage(sla, output_dir = './www/'):
     networks = ret.fetchall() 
     md += '## Networks ('+str(len(networks))+')\n'
     for network in networks:
+<<<<<<< HEAD
         if (not network[0]): continue
+=======
+>>>>>>> ac3058a... Network pages
         network_ = network[0].replace(' ','_')
         network_link='['+network[0]+'](./networks/'+network_+'.html) '
         md += ' - '+network_link+' '+' '.join(network[1:-1])
@@ -240,6 +305,7 @@ def generateIndexPage(sla, output_dir = './www/'):
     return True
     
 def generateContent(sla):
+<<<<<<< HEAD
 
     generateDirs(sla)
     populateDirs(sla)
@@ -249,6 +315,12 @@ def generateContent(sla):
     generateNetworkPages(sla,'60 minute')
     generateEntityPages(sla)
 
+=======
+    
+    generateDirs(sla)
+    generateAddressPages(sla)
+    generateNetworkPages(sla)
+>>>>>>> ac3058a... Network pages
     generateIndexPage(sla)
     return True
 

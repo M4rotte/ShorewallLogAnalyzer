@@ -22,9 +22,21 @@ except ImportError as e:
     sys.exit(1)
 
 
-from RDAP import getNetwork
-from Utils import is_valid_timestamp
-from Web import generateContent
+    import sys
+    import re
+    import sqlite3
+    import inspect
+    import datetime
+    import socket
+    import urllib
+
+    from RDAP import getNetwork, getEntity
+    from Utils import is_valid_timestamp
+    from Web import generateContent
+
+except ImportError as e:
+    print("Missing module : "+str(e),file=sys.stderr)
+    sys.exit(1)
 
 class ShorewallLogAnalyzer:
     """ Read log file, interprets data and write to database. """
@@ -225,7 +237,6 @@ class ShorewallLogAnalyzer:
                 self.log("Database locked. Exiting.")
                 self.dbConnection.close()
 
-
         self.tryCommit()        
         return True
 
@@ -238,7 +249,6 @@ class ShorewallLogAnalyzer:
         addresses = result.fetchall()
         self.initDB(self.initDBFilename, self.dbFilename)
         self.log(str(len(addresses))+" RDAP queries.")
-
         for address in addresses:
             try:
                 info = getNetwork(address[0])
@@ -251,9 +261,6 @@ class ShorewallLogAnalyzer:
                 continue
         self.tryCommit()        
         return True
-
-
-
 
     def updateEntities(self, refresh_all=False):
         
