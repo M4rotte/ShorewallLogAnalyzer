@@ -7,7 +7,6 @@ import time
 import urllib.parse
 import shutil
 
-
 def generateDirs(sla, output_dir = './www/'):
 
     try:
@@ -38,18 +37,18 @@ def navlinks():
     return ret
 
 def linkCSS(path = './'):
-
     
     return '<link rel="stylesheet" href="'+path+'default.css">\n'
 
 def linkJS(path = './'):
-    
+
     return '<script type="text/javascript" src="'+path+'default.js"></script>\n'
 
 def generateAddressPages(sla, since='', output_dir = './www/'):
 
     HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('../')+linkCSS('../')+'</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
+    
     sla.initDB(sla.initDBFilename,sla.dbFilename)
     if (not since):
         ret = sla.dbCursor.execute("SELECT address, network_name, network_country, address_name FROM addresses_view")
@@ -65,7 +64,6 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
         try:
             md = '# '+navlinks()
             md += ' '.join(address[0:])+'\n'
-
         except TypeError:
             md = '# '+navlinks()+address[0:]+'\n'    
         md += '## Packets ('+str(len(packets))+')\n'
@@ -119,7 +117,7 @@ def generateNetworkPages(sla, since= '', output_dir = './www/'):
         entities = ret.fetchone()
         
         md = '# '+navlinks()+' '.join(network[0:])+'\n'
-        
+     
         if (entities):
             md += '## Entities \n'
             for es in entities:
@@ -255,7 +253,7 @@ def generateNetworkPages(sla, output_dir = './www/'):
 
 def generateEntityPages(sla, output_dir = './www/'):
 
-    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('../')+linkCSS('../')+'</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
@@ -265,7 +263,7 @@ def generateEntityPages(sla, output_dir = './www/'):
     sla.log("Generating "+str(len(entities))+" entity pages.")
     for entity in entities:
         if (not entity[0]): continue
-        md = '# '+entity[0]+'\n'
+        md = '# '+navlinks()+entity[0]+'\n'
         info = ''
         if (entity[1]):
             try:
