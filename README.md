@@ -1,5 +1,6 @@
 # ShorewallLogAnalyzer
-Gather Shorewall logs to store them in a database. Calculate some stastistics from this data and some whois (or RDAP) requests to produce static HTML pages. **It's a work in progress, is not fully functionnal and may broke frequently**
+
+Gather Shorewall logs to store them in a database. Calculate some stastistics from this data and some RDAP requests to produce static HTML pages. **It's a work in progress, is not fully functionnal and may broke frequently**
 
 ## Usage
 
@@ -11,5 +12,4 @@ ShorewallLogAnalyzer expects the timestamp of the log to be a Unix timestamp wit
 Malformed lines will be ignored (with a message on standard error). If using systemd one can generate such a log with a command like :
 
     journalctl -o short-unix
-    
 

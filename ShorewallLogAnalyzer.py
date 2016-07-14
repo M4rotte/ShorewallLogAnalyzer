@@ -21,9 +21,12 @@ except ImportError as e:
     print("Missing module : "+str(e),file=sys.stderr)
     sys.exit(1)
 
+
+import RDAP
+
 class ShorewallLogAnalyzer:
     """ Read log file, interprets data and write to database. """
-    
+
     # Select and split each line to get timestamp and data
     logSplitter    = re.compile(r'(.*) Shorewall:')
     packets        = []
@@ -34,6 +37,7 @@ class ShorewallLogAnalyzer:
         else: sep = ''
         try:
             print(str(datetime.datetime.now())+" "+inspect.currentframe().f_back.f_code.co_name+sep+" "+message,file=sys.stderr)
+
         except (TypeError, urllib.error.URLError):
             pass
 
@@ -94,6 +98,7 @@ class ShorewallLogAnalyzer:
             self.log("Nothing to read !")
         
         self.log(str(len(self.packets))+" packets.")
+
         return(self.packets)
   
     
@@ -163,7 +168,6 @@ class ShorewallLogAnalyzer:
         self.log(str(max(0,self.dbCursor.rowcount))+" database rows modified.")
         return self.tryCommit()
 
-
     def updateAddresses(self):
         """ Select all uniq addresses from the `packets` table and insert them in the `addresses` table. """
         
@@ -203,6 +207,7 @@ class ShorewallLogAnalyzer:
         self.tryCommit()        
         return True
 
+
     def updateNetworks(self, refresh_all=False):
         
         if not refresh_all: query = "SELECT address FROM addresses WHERE addresses.network IS NULL OR addresses.network = ''"
@@ -223,6 +228,7 @@ class ShorewallLogAnalyzer:
                 continue
         self.tryCommit()        
         return True
+
 
     def updateEntities(self, refresh_all=False):
         
@@ -295,12 +301,4 @@ if (__name__ == "__main__"):
     analyzer.updateEntities()
     analyzer.declareViews('./shorewall.sqlite')
     analyzer.generateContent()
-    
-    
-
-    
-
-
-
-
-    
+   

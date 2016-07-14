@@ -5,6 +5,7 @@ import os
 import markdown
 import time
 import urllib.parse
+import shutil
 
 def generateDirs(sla, output_dir = './www/'):
 
@@ -16,16 +17,44 @@ def generateDirs(sla, output_dir = './www/'):
     except FileExistsError as e:
         sla.log(e)
 
+def populateDirs(sla, wwwskel = './wwwskel'):
+    
+    sla.log("Copying default files.")
+    try:
+        if os.path.isdir('./www/'):
+            shutil.copy(wwwskel+'/default.css','./www/')
+            shutil.copy(wwwskel+'/default.js','./www/')
+        else:
+            sla.log("No directory to populate.")
+
+    except FileNotFoundError as e:
+        sla.log(e)
+
+
+def navlinks():
+    
+    ret  = '[▲](../index.html) '
+    ret += '[◀](./index.html) '
+    return ret
+
+def linkCSS(path = './'):
+    
+    return '<link rel="stylesheet" href="'+path+'default.css">\n'
+
+def linkJS(path = './'):
+    
+    return '<script type="text/javascript" src="'+path+'default.js"></script>\n'
+
 def generateAddressPages(sla, since='', output_dir = './www/'):
 
-    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('../')+linkCSS('../')+'</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
     if (not since):
         ret = sla.dbCursor.execute("SELECT address, network_name, network_country, address_name FROM addresses_view")
     else:
-        ret = sla.dbCursor.execute("SELECT DISTINCT addr FROM objects WHERE timestamp > strftime('%s','now','-"+since+"')")   
+        ret = sla.dbCursor.execute("SELECT DISTINCT addr, address_name FROM objects WHERE timestamp > strftime('%s','now','-"+since+"')")   
     addresses = ret.fetchall()
 
     sla.log("Generating "+str(len(addresses))+" address pages.")
@@ -34,9 +63,10 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
         ret = sla.dbCursor.execute(query, (address[0], address[0]))
         packets = ret.fetchall()
         try:
-            md = '# '+' '.join(address[0:4])+'\n'
+            md = '# '+navlinks()
+            md += ' '.join(address[0:])+'\n'
         except TypeError:
-            md = '# '+address[0]+'\n'    
+            md = '# '+navlinks()+address[0:]+'\n'    
         md += '## Packets ('+str(len(packets))+')\n'
         for p in packets:
             md += ' - '
@@ -57,7 +87,7 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
 
 def generateNetworkPages(sla, since= '', output_dir = './www/'):
 
-    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('../')+linkCSS('../')+'</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
@@ -87,7 +117,7 @@ def generateNetworkPages(sla, since= '', output_dir = './www/'):
         ret = sla.dbCursor.execute(query)
         entities = ret.fetchone()
         
-        md = '# '+' '.join(network[0:4])+'\n'
+        md = '# '+navlinks()+' '.join(network[0:])+'\n'
         
         if (entities):
             md += '## Entities \n'
@@ -117,7 +147,7 @@ def generateNetworkPages(sla, since= '', output_dir = './www/'):
 
 def generateEntityPages(sla, output_dir = './www/'):
 
-    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('../')+linkCSS('../')+'</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
@@ -127,7 +157,7 @@ def generateEntityPages(sla, output_dir = './www/'):
     sla.log("Generating "+str(len(entities))+" entity pages.")
     for entity in entities:
         if (not entity[0]): continue
-        md = '# '+entity[0]+'\n'
+        md = '# '+navlinks()+entity[0]+'\n'
         info = ''
         if (entity[1]):
             try:
@@ -163,7 +193,7 @@ def generateEntityPages(sla, output_dir = './www/'):
 
 def generateIndexPage(sla, output_dir = './www/'):
 
-    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('./')+linkCSS('./')+'</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
@@ -210,10 +240,11 @@ def generateIndexPage(sla, output_dir = './www/'):
 def generateContent(sla):
     
     generateDirs(sla)
+    populateDirs(sla)
     #~ generateAddressPages(sla)
     #~ generateNetworkPages(sla)    
-    generateAddressPages(sla,'15 minute')
-    generateNetworkPages(sla,'15 minute')
+    generateAddressPages(sla,'60 minute')
+    generateNetworkPages(sla,'60 minute')
     generateEntityPages(sla)
     generateIndexPage(sla)
     return True
