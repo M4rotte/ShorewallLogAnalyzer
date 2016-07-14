@@ -25,8 +25,8 @@ GROUP BY `if_out`
 ORDER BY nb_packets DESC;
 
 CREATE VIEW IF NOT EXISTS addresses_view
-(address, network_name, network_country, address_name) AS SELECT
-address, name, country, hostname FROM addresses
+(address, network_name, network_country, address_name, network_entities, network_handle) AS SELECT
+address, name, country, hostname, entities, handle FROM addresses
 LEFT JOIN networks ON addresses.network=networks.handle;
 
 CREATE VIEW IF NOT EXISTS counters
@@ -38,7 +38,13 @@ SELECT COUNT(*) FROM addresses) AS addresses, (
 SELECT COUNT(*) FROM entities) AS entities
 ;
 
-
+CREATE VIEW IF NOT EXISTS objects
+(addr,network_name,network_country, network_entities, network_handle, timestamp) AS
+SELECT
+src AS addr,network_name,network_country, network_entities, network_handle, timestamp FROM packets INNER JOIN addresses_view ON src=address
+UNION SELECT
+dst AS addr,network_name,network_country, network_entities, network_handle, timestamp FROM packets INNER JOIN addresses_view ON dst=address
+;
 
 
 

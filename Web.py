@@ -16,13 +16,16 @@ def generateDirs(sla, output_dir = './www/'):
     except FileExistsError as e:
         sla.log(e)
 
-def generateAddressPages(sla, output_dir = './www/'):
+def generateAddressPages(sla, since='', output_dir = './www/'):
 
     HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
-    ret = sla.dbCursor.execute("SELECT address, network_name, network_country, address_name FROM addresses_view")
+    if (not since):
+        ret = sla.dbCursor.execute("SELECT address, network_name, network_country, address_name FROM addresses_view")
+    else:
+        ret = sla.dbCursor.execute("SELECT DISTINCT addr FROM objects WHERE timestamp > strftime('%s','now','-"+since+"')")   
     addresses = ret.fetchall()
 
     sla.log("Generating "+str(len(addresses))+" address pages.")
@@ -52,18 +55,22 @@ def generateAddressPages(sla, output_dir = './www/'):
         f.write(html)
         f.close()      
 
-def generateNetworkPages(sla, output_dir = './www/'):
+def generateNetworkPages(sla, since= '', output_dir = './www/'):
 
     HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
-    ret = sla.dbCursor.execute("SELECT * FROM networks")
+    if (not since):
+        ret = sla.dbCursor.execute("SELECT * FROM networks")
+    else:
+        ret = sla.dbCursor.execute("SELECT DISTINCT network_handle FROM objects WHERE timestamp > strftime('%s','now','-"+since+"')")
     networks = ret.fetchall()
 
     sla.log("Generating "+str(len(networks))+" network pages.")
     for network in networks:
         handle = network[0]
+        if not handle: continue
         query  = r'SELECT *,networks.handle FROM packets '
         query += r'INNER JOIN addresses ON addresses.address=packets.src '
         query += r'INNER JOIN networks ON networks.handle=addresses.network '
@@ -104,7 +111,6 @@ def generateNetworkPages(sla, output_dir = './www/'):
         html += markdown.markdown(md)
         html += HTML_END
         name = network[0].replace(' ','_')
-        if (not name): name = "0"
         f = open(output_dir+'networks/'+name+'.html','w')
         f.write(html)
         f.close() 
@@ -120,6 +126,7 @@ def generateEntityPages(sla, output_dir = './www/'):
 
     sla.log("Generating "+str(len(entities))+" entity pages.")
     for entity in entities:
+        if (not entity[0]): continue
         md = '# '+entity[0]+'\n'
         info = ''
         if (entity[1]):
@@ -149,7 +156,8 @@ def generateEntityPages(sla, output_dir = './www/'):
         html = HTML_START 
         html += markdown.markdown(md)
         html += HTML_END
-        f = open(output_dir+'entities/'+urllib.parse.quote(entity[0])+'.html','w')
+        name = urllib.parse.quote(entity[0])
+        f = open(output_dir+'entities/'+name+'.html','w')
         f.write(html)
         f.close()      
 
@@ -202,8 +210,10 @@ def generateIndexPage(sla, output_dir = './www/'):
 def generateContent(sla):
     
     generateDirs(sla)
-    generateAddressPages(sla)
-    generateNetworkPages(sla)
+    #~ generateAddressPages(sla)
+    #~ generateNetworkPages(sla)    
+    generateAddressPages(sla,'15 minute')
+    generateNetworkPages(sla,'15 minute')
     generateEntityPages(sla)
     generateIndexPage(sla)
     return True
