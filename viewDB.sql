@@ -29,6 +29,15 @@ CREATE VIEW IF NOT EXISTS addresses_view
 address, name, country, hostname FROM addresses
 LEFT JOIN networks ON addresses.network=networks.handle;
 
+CREATE VIEW IF NOT EXISTS counters
+(packets,networks,addresses,entities) AS SELECT
+(
+SELECT COUNT(*) FROM packets) AS packets, (
+SELECT COUNT(*) FROM networks) AS networks, (
+SELECT COUNT(*) FROM addresses) AS addresses, (
+SELECT COUNT(*) FROM entities) AS entities
+;
+
 
 
 

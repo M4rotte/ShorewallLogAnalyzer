@@ -18,7 +18,7 @@ def generateDirs(sla, output_dir = './www/'):
 
 def generateAddressPages(sla, output_dir = './www/'):
 
-    HTML_START = '<html>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
@@ -54,7 +54,7 @@ def generateAddressPages(sla, output_dir = './www/'):
 
 def generateNetworkPages(sla, output_dir = './www/'):
 
-    HTML_START = '<html>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
@@ -111,7 +111,7 @@ def generateNetworkPages(sla, output_dir = './www/'):
 
 def generateEntityPages(sla, output_dir = './www/'):
 
-    HTML_START = '<html>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
@@ -134,8 +134,9 @@ def generateEntityPages(sla, output_dir = './www/'):
                     try:
                         addr1 = e[1][4][1]['label'].replace('\n','<br />')
                     except KeyError: pass
+                # May contain the address, but maybe something else.
                 #~ try:    
-                    #~ addr2 = ' '.join(e[1][3][3][0:]).strip()
+                    #~ addr2 = ' '.join(e[1][3][3][0:]).strip() 
                 #~ except TypeError: pass    
                 addr2 = ''
                 for i in e[1][5:]:
@@ -154,14 +155,22 @@ def generateEntityPages(sla, output_dir = './www/'):
 
 def generateIndexPage(sla, output_dir = './www/'):
 
-    HTML_START = '<html>\n<body>\n'
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
     sla.log("Generating index page.")
     md = ''
+    sla.log("Counters...")
+    ret = sla.dbCursor.execute("SELECT * FROM counters")
+    counters = ret.fetchone()
+    md += str(counters[0])+' packets — '
+    md += str(counters[1])+' networks — '
+    md += str(counters[2])+' addresses — '
+    md += str(counters[3])+' entities '
+    md += '\n'
     sla.log("Networks...")
-    ret = sla.dbCursor.execute("SELECT * FROM networks;")
+    ret = sla.dbCursor.execute("SELECT * FROM networks")
     networks = ret.fetchall() 
     md += '## Networks ('+str(len(networks))+')\n'
     for network in networks:
