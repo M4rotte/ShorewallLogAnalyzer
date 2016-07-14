@@ -31,7 +31,6 @@ def populateDirs(sla, wwwskel = './wwwskel'):
     except FileNotFoundError as e:
         sla.log(e)
 
-
 def navlinks():
     
     ret  = '[▲](../index.html) '
@@ -66,6 +65,7 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
         try:
             md = '# '+navlinks()
             md += ' '.join(address[0:])+'\n'
+
         except TypeError:
             md = '# '+navlinks()+address[0:]+'\n'    
         md += '## Packets ('+str(len(packets))+')\n'
@@ -199,12 +199,16 @@ def generateNetworkPages(sla, output_dir = './www/'):
     HTML_END   = '\n</body>\n</html>\n'
 
     sla.initDB(sla.initDBFilename,sla.dbFilename)
-    ret = sla.dbCursor.execute("SELECT * FROM networks")
+    if (not since):
+        ret = sla.dbCursor.execute("SELECT * FROM networks")
+    else:
+        ret = sla.dbCursor.execute("SELECT DISTINCT network_handle FROM objects WHERE timestamp > strftime('%s','now','-"+since+"')")
     networks = ret.fetchall()
 
     sla.log("Generating "+str(len(networks))+" network pages.")
     for network in networks:
         handle = network[0]
+        if not handle: continue
         query  = r'SELECT *,networks.handle FROM packets '
         query += r'INNER JOIN addresses ON addresses.address=packets.src '
         query += r'INNER JOIN networks ON networks.handle=addresses.network '
@@ -221,7 +225,7 @@ def generateNetworkPages(sla, output_dir = './www/'):
         ret = sla.dbCursor.execute(query)
         entities = ret.fetchone()
         
-        md = '# '+' '.join(network[0:4])+'\n'
+        md = '# '+navlinks()+' '.join(network[0:4])+'\n'
         
         if (entities):
             md += '## Entities \n'
@@ -245,7 +249,6 @@ def generateNetworkPages(sla, output_dir = './www/'):
         html += markdown.markdown(md)
         html += HTML_END
         name = network[0].replace(' ','_')
-        if (not name): name = "0"
         f = open(output_dir+'networks/'+name+'.html','w')
         f.write(html)
         f.close() 
@@ -261,6 +264,7 @@ def generateEntityPages(sla, output_dir = './www/'):
 
     sla.log("Generating "+str(len(entities))+" entity pages.")
     for entity in entities:
+        if (not entity[0]): continue
         md = '# '+entity[0]+'\n'
         info = ''
         if (entity[1]):
@@ -290,7 +294,8 @@ def generateEntityPages(sla, output_dir = './www/'):
         html = HTML_START 
         html += markdown.markdown(md)
         html += HTML_END
-        f = open(output_dir+'entities/'+urllib.parse.quote(entity[0])+'.html','w')
+        name = urllib.parse.quote(entity[0])
+        f = open(output_dir+'entities/'+name+'.html','w')
         f.write(html)
         f.close()      
 
