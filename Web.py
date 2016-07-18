@@ -191,7 +191,7 @@ def generateEntityPages(sla, output_dir = './www/'):
         f.write(html)
         f.close()      
 
-def generateNetworkPages(sla, output_dir = './www/'):
+def generateNetworkPages(sla, since = '', output_dir = './www/'):
 
     HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
