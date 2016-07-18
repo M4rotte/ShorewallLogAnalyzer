@@ -191,7 +191,7 @@ def generateEntityPages(sla, output_dir = './www/'):
         f.write(html)
         f.close()      
 
-def generateNetworkPages(sla, since = '', output_dir = './www/'):
+def generateNetworkPages(sla, output_dir = './www/'):
 
     HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
@@ -346,10 +346,10 @@ def generateContent(sla):
 
     generateDirs(sla)
     populateDirs(sla)
-    #~ generateAddressPages(sla)
-    #~ generateNetworkPages(sla)    
-    generateAddressPages(sla,'60 minute')
-    generateNetworkPages(sla,'60 minute')
+    generateAddressPages(sla)
+    generateNetworkPages(sla)    
+    #~ generateAddressPages(sla,'60 minute')
+    #~ generateNetworkPages(sla,'60 minute')
     generateEntityPages(sla)
     generateIndexPage(sla)
     return True
