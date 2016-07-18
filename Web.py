@@ -58,6 +58,7 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
 
     sla.log("Generating "+str(len(addresses))+" address pages.")
     for address in addresses:
+        if (not address[0]): continue
         query = r'SELECT * FROM packets WHERE src = ? OR dst = ? ORDER BY chain, action, timestamp DESC'
         ret = sla.dbCursor.execute(query, (address[0], address[0]))
         packets = ret.fetchall()
@@ -65,7 +66,7 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
             md = '# '+navlinks()
             md += ' '.join(address[0:])+'\n'
         except TypeError:
-            md = '# '+navlinks()+address[0:]+'\n'    
+            md = '# '+navlinks()+str(address[0:])+'\n'    
         md += '## Packets ('+str(len(packets))+')\n'
         for p in packets:
             md += ' - '
@@ -191,7 +192,7 @@ def generateEntityPages(sla, output_dir = './www/'):
         f.write(html)
         f.close()      
 
-def generateNetworkPages(sla, output_dir = './www/'):
+def generateNetworkPages(sla, output_dir = './www/', since = ''):
 
     HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
