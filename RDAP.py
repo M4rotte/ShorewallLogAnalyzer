@@ -32,7 +32,7 @@ class RDAP:
             data  = json.loads(rawdata)        
         except (urllib.error.HTTPError, urllib.error.URLError, socket.timeout) as e:
             print(e,file=sys.stderr)
-            return False
+            return json.loads('{"error" :"'+str(e)+'"}')
         return data
     
     def getASR(self):
@@ -90,7 +90,8 @@ class RDAP:
             parent_handle  = data.get('parent_handle','')
             source         = rdap_url
         except AttributeError:
-            return ('','','','','','','','','')
+            error = data.get('error','')
+            return (error,'','','','','','','','')
         try:
             for e in data['entities']:
                 entities.append(e['handle'])
@@ -111,7 +112,8 @@ class RDAP:
             vcard          = data.get('vcardArray', '')
             source         = rdap_url
         except AttributeError:
-            return ('','','','','','','','','')
+            error = data.get('error','')
+            return (error,'','','','','','','','')
         try:
             for e in data['entities']:
                 entities.append(e['handle'])
