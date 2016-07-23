@@ -85,7 +85,32 @@ def generateAddressPages(sla, since='', output_dir = './www/'):
         f.write(html)
         f.close()      
 
-def generateNetworkPages(sla, since= '', output_dir = './www/'):
+def generateAddressIndexPage(sla, output_dir = './www/'):
+
+    HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('../')+linkCSS('../')+'</head>\n<body>\n'
+    HTML_END   = '\n</body>\n</html>\n'
+    
+    sla.initDB(sla.initDBFilename,sla.dbFilename)
+    ret = sla.dbCursor.execute("SELECT addr,SUM(1) AS s FROM objects GROUP BY addr ORDER BY s DESC")    
+    addresses = ret.fetchall()
+    
+    sla.log("Generating address index page.")
+    md = '# '+navlinks()+' Addresses '+str(len(addresses))+'\n'
+    for address in addresses:
+        if (not address[0]): continue
+        address_link='['+address[0]+'](./'+address[0]+'.html) '
+        md += ' - '+address_link+' '+'\t'+str(address[1])
+        md += '\n'
+    
+    html = HTML_START
+    html += markdown.markdown(md)
+    html += HTML_END
+    f = open(output_dir+'addresses/index.html','w')
+    f.write(html)
+    f.close() 
+
+
+def generateNetworkPages(sla, since = '', output_dir = './www/'):
 
     HTML_START = '<html>\n<head>\n<meta charset="UTF-8">\n'+linkJS('../')+linkCSS('../')+'</head>\n<body>\n'
     HTML_END   = '\n</body>\n</html>\n'
@@ -155,7 +180,7 @@ def generateNetworkIndexPage(sla, output_dir = './www/'):
     ret = sla.dbCursor.execute("SELECT network_name,SUM(1) AS s, network_handle  FROM objects GROUP BY network_name ORDER BY s DESC")    
     networks = ret.fetchall()
     
-    sla.log("Generating "+str(len(networks))+" network index page.")
+    sla.log("Generating network index page.")
     md = '# '+navlinks()+' Networks '+str(len(networks))+'\n'
     for network in networks:
         if (not network[0]): continue
@@ -167,7 +192,6 @@ def generateNetworkIndexPage(sla, output_dir = './www/'):
     html = HTML_START
     html += markdown.markdown(md)
     html += HTML_END
-    name = network[0].replace(' ','_')
     f = open(output_dir+'networks/index.html','w')
     f.write(html)
     f.close() 
@@ -314,10 +338,11 @@ def generateContent(sla):
 
     generateDirs(sla)
     populateDirs(sla)
-    #~ generateAddressPages(sla)
-    #~ generateNetworkPages(sla)    
-    generateAddressPages(sla,'60 minute')
-    generateNetworkPages(sla,'60 minute')
+    #~ generateAddressPages(sla,'60 minute')
+    generateAddressPages(sla)
+    generateAddressIndexPage(sla)
+    #~ generateNetworkPages(sla,'60 minute')
+    generateNetworkPages(sla) 
     generateNetworkIndexPage(sla)
     generateEntityPages(sla)
     generateIndexPage(sla)
