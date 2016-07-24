@@ -21,23 +21,6 @@ except ImportError as e:
     print("Missing module : "+str(e),file=sys.stderr)
     sys.exit(1)
 
-
-    import sys
-    import re
-    import sqlite3
-    import inspect
-    import datetime
-    import socket
-    import urllib
-
-    from RDAP import getNetwork, getEntity
-    from Utils import is_valid_timestamp
-    from Web import generateContent
-
-except ImportError as e:
-    print("Missing module : "+str(e),file=sys.stderr)
-    sys.exit(1)
-
 class ShorewallLogAnalyzer:
     """ Read log file, interprets data and write to database. """
 
